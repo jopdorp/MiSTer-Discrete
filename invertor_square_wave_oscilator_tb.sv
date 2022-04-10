@@ -1,20 +1,11 @@
-/*********************************************************************\
- *  Simplified model of the below circuit.
- *  This model does not take the  transfer functions of the invertors 
- *  into account
+/********************************************************************************\
+ * 
+ *  MiSTer Discrete invertor square wave oscilator test bench
  *
- *        |\        |\
- *        | \       | \
- *     +--|  >o--+--|-->o--+-------> out
- *     |  | /    |  | /    |
- *     |  |/     |  |/     |
- *     Z         Z         |
- *     Z         Z R1     --- C
- *     Z         Z        --- 
- *     |         |         |
- *     '---------+---------'
+ *  Copyright 2022 by Jegor van Opdorp. 
+ *  This program is free software under the terms of the GPLv3, see LICENCSE.txt
  *
- *********************************************************************/
+ ********************************************************************************/
 module invertor_square_wave_oscilator_tb();
 
     reg clk = 0;

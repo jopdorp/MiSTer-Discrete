@@ -1,4 +1,42 @@
-module invertor_square_wave_oscilator#(
+/********************************************************************************\
+ * 
+ *  MiSTer Discrete invertor square wave oscilator test bench
+ *
+ *  Copyright 2022 by Jegor van Opdorp. 
+ *  This program is free software under the terms of the GPLv3, see LICENCSE.txt
+ *
+ *           v_pos
+ *              V
+ *              |
+ *        .-----+---+-----------------------------.
+ *        |         |                             |
+ *        |         |                             |
+ *        |         |                             |
+ *        Z         |8                            |
+ *     R1 Z     .---------.                       |
+ *        |    7|  Vcc    |                       |
+ *        +-----|Discharge|                       |
+ *        |     |         |                       |
+ *        Z     |   555   |3                      |
+ *     R2 Z     |      Out|---> Output Node       |
+ *        |    6|         |                       |
+ *        +-----|Threshold|                       | 
+ *        |     |         |                       |
+ *        +-----|Trigger  |                       |
+ *        |    2|         |---< Control Voltage   |
+ *        |     |  Reset  |5                      |
+ *        |     '---------'                       |
+ *       ---        4|                            |
+ *     C ---         +----------------------------'
+ *        |          |
+ *        |          ^
+ *       gnd       Reset
+ * 
+ *     Drawing based on a drawing from MAME discrete
+ *
+ ********************************************************************************/
+
+module astable_555_vco#(
     parameter CLOCK_RATE = 50000000,
     parameter SAMPLE_RATE = 48000,
     parameter VCC = 12,

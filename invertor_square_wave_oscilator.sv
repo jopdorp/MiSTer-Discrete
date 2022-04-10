@@ -1,12 +1,18 @@
-/*********************************************************************\
+/*********************************************************************************\
+ *  
+ *  MiSTer Discrete invertor square wave oscilator
+ *
+ *  Copyright 2022 by Jegor van Opdorp. 
+ *  This program is free software under the terms of the GPLv3, see LICENCSE.txt
+ *
+ *
  *  Simplified model of the below circuit.
  *  This model does not take the  transfer functions of the invertors 
  *  into account:
  * 
  *  f = 1 / 2.2 R1C1
+ *  This equation was found on:
  *  https://www.gadgetronicx.com/square-wave-generator-logic-gates/
- * 
- *  
  *
  *        |\        |\
  *        | \       | \
@@ -19,7 +25,9 @@
  *     |         |         |
  *     '---------+---------'
  *
- *********************************************************************/
+ *     Drawing based on a drawing from MAME discrete
+ *
+ *********************************************************************************/
 module invertor_square_wave_oscilator#(
     parameter CLOCK_RATE = 50000000,
     parameter SAMPLE_RATE = 48000,

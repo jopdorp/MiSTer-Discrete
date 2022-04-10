@@ -1,7 +1,6 @@
 # MiSTer Discrete
 
 This is an effort to make the real-time simulation of analog circuits possible on MiSTer.
-
 ## Why this is important
 
 * Many old computers have analog circuits that are a step between the tape input and the chip.

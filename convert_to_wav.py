@@ -1,3 +1,12 @@
+##################################################################################\
+#
+#  MiSTer Discrete csv to wav converter
+#
+#  Copyright 2022 by Jegor van Opdorp. 
+#  This program is free software under the terms of the GPLv3, see LICENCSE.txt
+#
+##################################################################################/
+
 import sys
 import pandas as pd
 import soundfile as sf
