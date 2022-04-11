@@ -21,10 +21,10 @@ August 2, 2010, Kitchener, Ontario, Canada
 */
  
 (
-	input [23:0]	DIN_4_shifted,
+	input [23:0]	DIN_8_shifted,
 	input			clk,
  
-	output	[11:0]	DOUT_4_shifted // not 100% sure this is shifted
+	output	[11:0]	DOUT_8_shifted
 );
  
  
@@ -37,13 +37,13 @@ reg	[5:0]	barrelout;
 reg	[20:0]	barrelin;
 reg	[7:0]	LUTout;
  
-assign	DOUT_4_shifted	=	{priencout3, LUTout};	// Basic top-level connectivity
+assign	DOUT_8_shifted	=	{priencout3, LUTout};	// Basic top-level connectivity
  
 always @(posedge clk) 					
 begin
 	priencout2	<=	priencout1;
 	priencout3	<=	priencout2;
-	barrelin	<=	DIN_4_shifted[22:2];
+	barrelin	<=	DIN_8_shifted[22:2];
 end
  
  
@@ -54,7 +54,7 @@ begin
 end
  
  
-wire	[15:0]	priencin = DIN_4_shifted[23:8];
+wire	[15:0]	priencin = DIN_8_shifted[23:8];
  
 always @(posedge clk)						// Priority encoder
  

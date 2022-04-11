@@ -42,6 +42,7 @@ Sometimes v_ref is lower than ground, for example when the signals range between
 
 Each time audio_clk_en goes high, the modules set their outputs as a direct relationship between their individual current state and their input signals.
 
+The bit depth of the input and output signals of a module can be set by adjusting the WITH parameter, which defaults to 16
 ## Testing modules
 
 Modules are accompanied by testbenches that output csv and wav files.

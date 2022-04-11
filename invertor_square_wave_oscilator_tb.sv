@@ -10,9 +10,7 @@ module invertor_square_wave_oscilator_tb();
 
     reg clk = 0;
     reg audio_clk_en = 1;
-    wire out;
-    wire[15:0] audio_out;
-    assign audio_out = out <<< 15;
+    wire[15:0] out;
     invertor_square_wave_oscilator #(.CLOCK_RATE(48000),.R1(430),.C_16_SHIFTED(65536)) osc (
         clk,
         audio_clk_en,
@@ -27,7 +25,7 @@ module invertor_square_wave_oscilator_tb();
             #1 clk = 1;
             #1 clk = 0;
             #1;
-            $fwrite(file,"%d\n", audio_out);
+            $fwrite(file,"%d\n", out);
         end
     endtask
 
