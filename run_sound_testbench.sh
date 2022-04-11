@@ -22,5 +22,5 @@ then
 fi 
  
 
-iverilog -y ./ ${MODULE}.sv -g2012 -o ${MODULE}_tb.sv.vvp ${MODULE}_tb.sv
+iverilog -grelative-include -y ./ ${MODULE}.sv -g2012 -o ${MODULE}_tb.sv.vvp ${MODULE}_tb.sv
 vvp ${MODULE}_tb.sv.vvp && python convert_to_wav.py ${MODULE}.csv
