@@ -16,7 +16,7 @@ To make these efforts reusable, we have to follow a discipline, so all the subci
 ## How it works
 
 MiSTer Discrete is not a circuit simulation in the traditional sense.
-Simulation arbitry electronic circuits is not supported.
+Simulation arbitrary electronic circuits is not supported.
 Instead, common subcircuits found on analog PCB boards are implemented as simplified models.
 As a core builder, you can connect there simplified models together to create an analog PCB simulation.
 
