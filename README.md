@@ -16,7 +16,11 @@ To make these efforts reusable, we have to follow a discipline, so all the subci
 ## How it works
 
 MiSTer Discrete is not a circuit simulation in the traditional sense.
-Simulation arbitrary electronic circuits is not supported.
+
+In MiSTer Discrete, there is no way of transferring energy from one module to another,
+or storing energy. It is not an energy based simulation.
+
+Because of this, simulating arbitrary electronic circuits is not supported.
 Instead, common subcircuits found on analog PCB boards are implemented as simplified models.
 As a core builder, you can connect there simplified models together to create an analog PCB simulation.
 
@@ -36,7 +40,7 @@ VCC, or v_plus is equivalent to {16{1'b1}} on the output or input signals.
 Ground, or v_ref is equivalent to 0 on the output or input signals.
 Sometimes v_ref is lower than ground, for example when the signals range between -12v and 12V
 
-Each time audio_clk_en goes high, the modules set their outputs as a direct relationship between their current state and their input signals.
+Each time audio_clk_en goes high, the modules set their outputs as a direct relationship between their individual current state and their input signals.
 
 ## Testing modules
 
