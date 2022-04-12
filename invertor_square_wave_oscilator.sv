@@ -13,6 +13,10 @@
  *  f = 1 / 2.2 R1C1
  *  This equation was found on:
  *  https://www.gadgetronicx.com/square-wave-generator-logic-gates/
+ *  
+ *  The equation didn't coincide with the circuit simulated version.
+ *  It looks like the above formula is to obtain the SWITCHING feequency.
+ *  The actualy frequency is twice lower.
  *
  *        |\        |\
  *        | \       | \
@@ -39,8 +43,9 @@ module invertor_square_wave_oscilator#(
     input audio_clk_en,
     output reg[15:0] out
 );
-    localparam CONSTANT_RATIO_16_SHIFTED = 29789; // (1/2.2) * 2 ^ 16
-    localparam longint FREQUENCY_16_SHIFTED = CONSTANT_RATIO_16_SHIFTED * (R1 * C_16_SHIFTED) >>> 16;
+    localparam longint R1_K_OHM_16_SHIFTED = R1 * 16777 >>> 8; // 1/1000 <<< 24 = 16777
+    localparam CONSTANT_RATIO_16_SHIFTED = 14895; // 1/2.2/2 * 2 ^ 16
+    localparam longint FREQUENCY_16_SHIFTED = CONSTANT_RATIO_16_SHIFTED * (R1_K_OHM_16_SHIFTED * C_16_SHIFTED) >>> 32;
     localparam WAVE_LENGTH = (CLOCK_RATE <<< 16) / FREQUENCY_16_SHIFTED;
     localparam HALF_WAVE_LENGTH = WAVE_LENGTH >>> 1;
 

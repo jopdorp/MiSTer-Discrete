@@ -19,8 +19,7 @@ then
     echo "The testbench name relates to the module like:"
     echo "module.sv module_tb.sv"
 	exit 0
-fi 
- 
+fi
 
-iverilog -grelative-include -y ./ ${MODULE}.sv -g2012 -o ${MODULE}_tb.sv.vvp ${MODULE}_tb.sv
+iverilog -y ./math/ -y ./ -Y .sv -Y .v ${MODULE}.sv -g2012 -o ${MODULE}_tb.sv.vvp ${MODULE}_tb.sv
 vvp ${MODULE}_tb.sv.vvp

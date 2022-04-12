@@ -39,16 +39,6 @@
  *     Drawing based on a drawing from MAME discrete
  *
  ********************************************************************************/
-`ifndef natural_log
-`define natural_log
-`include "math/natural_log.sv"
-`endif
-
-`ifndef invertor_square_wave_oscilator
-`define invertor_square_wave_oscilator
-`include "invertor_square_wave_oscilator.sv"
-`endif
-
 module astable_555_vco#(
     parameter CLOCK_RATE = 50000000,
     parameter SAMPLE_RATE = 48000,
@@ -58,7 +48,7 @@ module astable_555_vco#(
 ) (
     input clk,
     input audio_clk_en,
-    input[23:0] v_control,
+    input[15:0] v_control,
     output reg[15:0] out
 );
     localparam longint VCC = 65536;

@@ -6,10 +6,6 @@
  *  This program is free software under the terms of the GPLv3, see LICENCSE.txt
  *
  ********************************************************************************/
-`ifndef Log2highacc
-`define Log2highacc
-`include "Log2highacc.sv"
-`endif
 module natural_log(input clk, input[23:0] in_8_shifted, output reg[15:0] out_8_shifted = 0);
     
     localparam RATIO_16_SHIFTED = 45426; // 1 / log2(e)
