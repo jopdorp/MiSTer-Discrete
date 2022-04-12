@@ -22,7 +22,7 @@ or storing energy. It is not an energy based simulation.
 
 Because of this, simulating arbitrary electronic circuits is not supported.
 Instead, common subcircuits found on analog PCB boards are implemented as simplified models.
-As a core builder, you can connect there simplified models together to create an analog PCB simulation.
+As a core builder, you can connect these simplified models together to create an analog PCB simulation.
 
 ## The formal engineering discipline
 
