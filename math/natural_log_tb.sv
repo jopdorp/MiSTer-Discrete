@@ -18,13 +18,46 @@ module invertor_square_wave_oscilator_tb();
     );
 
     initial begin
+        #1 in = 256; 
+        #1 clk = 0;
+        #1 clk = 1;
+        #1 clk = 0;
+        #1 clk = 1;
+        #1 clk = 0;
+        #1 clk = 1;
+        #1 clk = 0;
+        #1 clk = 1;
+        #1 $display("%h", out);
+        assert (out == 4) else begin
+            $display("wrong");
+        end
+        #1 clk = 0;
+        #1 clk = 1;
+        assert (out == 4) else begin
+            $display("wrong");
+        end
+        #1 clk = 0;
+        #1 clk = 1;
+        assert (out == 4) else begin
+            $display("wrong");
+        end
+        #1 clk = 0;
+        #1 clk = 1;
+        assert (out == 4) else begin
+            $display("wrong");
+        end
+        #1 clk = 0;
+        #1 clk = 1;
+        assert (out == 4) else begin
+            $display("wrong");
+        end
         #1 in = 'h1000; 
         #1 clk = 0;
         #1 clk = 1;
-        #1 $display("%h", out);
         #1 clk = 0;
         #1 clk = 1;
-        #1 $display("%h", out);
+        #1 clk = 0;
+        #1 clk = 1;
         #1 clk = 0;
         #1 clk = 1;
         #1 $display("%h", out);
