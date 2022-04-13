@@ -22,7 +22,7 @@ or storing energy. It is not an energy based simulation.
 
 Because of this, simulating arbitrary electronic circuits is not supported.
 Instead, common subcircuits found on analog PCB boards are implemented as simplified models.
-As a core builder, you can connect there simplified models together to create an analog PCB simulation.
+As a core builder, you can connect these simplified models together to create an analog PCB simulation.
 
 ## The formal engineering discipline
 
@@ -36,13 +36,12 @@ ports:
 * input wire[15:0] \<input name\>; // optinonal unsigned input signals
 * output reg[15:0] out; // unsigned output signal
 
-VCC, or v_plus is equivalent to {16{1'b1}} on the output or input signals.
+VCC, or v_plus is equivalent to {15{1'b1}} on the output or input signals.
 Ground, or v_ref is equivalent to 0 on the output or input signals.
 Sometimes v_ref is lower than ground, for example when the signals range between -12v and 12V
 
 Each time audio_clk_en goes high, the modules set their outputs as a direct relationship between their individual current state and their input signals.
 
-The bit depth of the input and output signals of a module can be set by adjusting the WITH parameter, which defaults to 16
 ## Testing modules
 
 Modules are accompanied by testbenches that output csv and wav files.
