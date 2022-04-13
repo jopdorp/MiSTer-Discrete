@@ -41,7 +41,7 @@ module invertor_square_wave_oscilator#(
 ) (
     input clk,
     input audio_clk_en,
-    output reg[15:0] out
+    output reg[15:0] out = 0
 );
     localparam longint R1_K_OHM_16_SHIFTED = R1 * 16777 >>> 8; // 1/1000 <<< 24 = 16777
     localparam CONSTANT_RATIO_16_SHIFTED = 14895; // 1/2.2/2 * 2 ^ 16

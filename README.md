@@ -36,7 +36,7 @@ ports:
 * input wire[15:0] \<input name\>; // optinonal unsigned input signals
 * output reg[15:0] out; // unsigned output signal
 
-VCC, or v_plus is equivalent to {15{1'b1}} on the output or input signals.
+VCC, or v_plus is equivalent to {16{1'b1}} on the output or input signals.
 Ground, or v_ref is equivalent to 0 on the output or input signals.
 Sometimes v_ref is lower than ground, for example when the signals range between -12v and 12V
 

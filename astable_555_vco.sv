@@ -52,7 +52,7 @@ module astable_555_vco#(
     input[15:0] v_control,
     output reg[15:0] out = 0
 );
-    localparam longint VCC = 32770; // TODO actually 32768, but that could lead to division by zero, should this be 65537?
+    localparam longint VCC = 65535;
     localparam ln2_16_SHIFTED = 45426;
     localparam longint C_R2_ln2_22_SHIFTED = C_35_SHIFTED * R2 * ln2_16_SHIFTED >>> 29;
     localparam longint C_R1_R2_35_SHIFTED = C_35_SHIFTED * (R1 + R2);
@@ -71,7 +71,7 @@ module astable_555_vco#(
     reg[63:0] WAVE_LENGTH;
     reg[62:0] CYCLES_HIGH;
 
-    assign v_control_32_bits = v_control;
+    assign v_control_32_bits = v_control < 65531 ? v_control : 65531;
 
     assign WAVE_LENGTH = CYCLES_HIGH + CYCLES_LOW;
 
@@ -88,7 +88,7 @@ module astable_555_vco#(
         end
 
         if(audio_clk_en)begin
-            out <= (wave_length_counter < CYCLES_HIGH) <<< 15;
+            out <= {16{wave_length_counter < CYCLES_HIGH}};
         end
     end
 endmodule
