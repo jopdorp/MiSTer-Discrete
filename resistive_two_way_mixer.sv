@@ -22,7 +22,7 @@
  ********************************************************************************/
 module resistive_two_way_mixer #(
     parameter longint R0 = 10000,
-    parameter R1 = 10000
+    parameter longint R1 = 10000
 ) ( 
     input clk,
     input[15:0] inputs[1:0],
