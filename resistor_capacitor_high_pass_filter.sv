@@ -4,6 +4,8 @@
  *
  *  Copyright 2022 by Jegor van Opdorp. 
  *  This program is free software under the terms of the GPLv3, see LICENCSE.txt
+ *
+ *  based on https://en.wikipedia.org/wiki/High-pass_filter
  *          
  ********************************************************************************/
 module resistor_capacitor_high_pass_filter #(
