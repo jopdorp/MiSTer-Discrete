@@ -25,7 +25,7 @@
  *        Z     |   555   |3                      |
  *     R2 Z     |      Out|---> Output Node       |
  *        |    6|         |                       |
- *        +-----|Threshold|                       | 
+ *        +-----|Threshold|                       |
  *        |     |         |                       |
  *        +-----|Trigger  |                       |
  *        |    2|         |---< Control Voltage   |

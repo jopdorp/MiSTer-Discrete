@@ -1,12 +1,12 @@
 /********************************************************************************\
  * 
- *  MiSTer Discrete resistor_capacitor_low_pass_filter test bench
+ *  MiSTer Discrete resistor_capacitor_high_pass_filter test bench
  *
  *  Copyright 2022 by Jegor van Opdorp. 
  *  This program is free software under the terms of the GPLv3, see LICENCSE.txt
  *
  ********************************************************************************/
-module resistor_capacitor_low_pass_filter_tb();
+module resistor_capacitor_high_pass_filter_tb();
 
     reg clk = 0;
     reg audio_clk_en = 0;
@@ -24,7 +24,7 @@ module resistor_capacitor_low_pass_filter_tb();
         .out(out)
     );
 
-    resistor_capacitor_low_pass_filter #(.CLOCK_RATE(CLOCK_RATE)) filter (
+    resistor_capacitor_high_pass_filter #(.CLOCK_RATE(CLOCK_RATE)) filter (
         clk,
         audio_clk_en,
         out,
@@ -53,7 +53,7 @@ module resistor_capacitor_low_pass_filter_tb();
 
     localparam steps = CYCLES_PER_SAMPLE * 1500;
     initial begin
-        file = $fopen("resistor_capacitor_low_pass_filter.csv","wb");
+        file = $fopen("resistor_capacitor_high_pass_filter.csv","wb");
         #1 v_control = 1 <<< 16 - 1;
         #1 run_times(steps);
         #1 v_control = (1 <<< 16) - (1 <<< 1);

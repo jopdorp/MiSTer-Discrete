@@ -36,8 +36,7 @@ module invertor_square_wave_oscilator#(
     parameter CLOCK_RATE = 50000000,
     parameter SAMPLE_RATE = 48000,
     parameter R1 = 4300,
-    parameter C_16_SHIFTED = 655360, // 10 microfarad
-    parameter WIDTH = 16
+    parameter C_16_SHIFTED = 655360 // 10 microfarad
 ) (
     input clk,
     input audio_clk_en,
@@ -59,7 +58,7 @@ module invertor_square_wave_oscilator#(
         end
 
         if (audio_clk_en) begin
-            out <=  {WIDTH{wave_length_counter < HALF_WAVE_LENGTH}};
+            out <=  {16{wave_length_counter < HALF_WAVE_LENGTH}};
         end
     end
 endmodule

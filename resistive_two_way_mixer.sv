@@ -25,14 +25,17 @@ module resistive_two_way_mixer #(
     parameter longint R1 = 10000
 ) ( 
     input clk,
+    input audio_clk_en,
     input[15:0] inputs[1:0],
-    output reg[15:0] out
+    output reg[15:0] out = 0
 );
-    localparam longint R0_RATIO_16_SHIFTED = ((R1 <<< 16) / R0);
-    localparam longint R1_RATIO_16_SHIFTED = ((R0 <<< 16) / R1);
-    localparam longint NORMALIZATION_RATIO_16_SHIFTED = (1 <<< 32)/(R0_RATIO_16_SHIFTED+R1_RATIO_16_SHIFTED);
+    localparam R0_RATIO_16_SHIFTED = ((R1 <<< 16) / R0);
+    localparam R1_RATIO_16_SHIFTED = ((R0 <<< 16) / R1);
+    localparam NORMALIZATION_RATIO_16_SHIFTED = (1 <<< 32)/(R0_RATIO_16_SHIFTED+R1_RATIO_16_SHIFTED);
 
     always @(posedge clk) begin
-        out <= (R0_RATIO_16_SHIFTED * inputs[0] + R1_RATIO_16_SHIFTED * inputs[1]) * NORMALIZATION_RATIO_16_SHIFTED >>> 32;
+        if(audio_clk_en)begin
+            out <= (R0_RATIO_16_SHIFTED * inputs[0] + R1_RATIO_16_SHIFTED * inputs[1]) * NORMALIZATION_RATIO_16_SHIFTED >>> 32;
+        end
     end
 endmodule
