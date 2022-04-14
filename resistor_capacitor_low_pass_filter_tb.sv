@@ -13,17 +13,20 @@ module resistor_capacitor_low_pass_filter_tb();
     reg[15:0] v_control = 0;
     wire[15:0] out;
     wire[15:0] filtered_out;
+    localparam CLOCK_RATE = 1000000;
+    localparam SAMPLE_RATE = 48000;
+    localparam CYCLES_PER_SAMPLE = CLOCK_RATE / SAMPLE_RATE;
 
-    astable_555_vco #(.CLOCK_RATE(192000)) osc (
+    astable_555_vco #(.CLOCK_RATE(CLOCK_RATE)) osc (
         .clk(clk),
         .audio_clk_en(audio_clk_en),
         .v_control(v_control),
         .out(out)
     );
 
-    resistor_capacitor_low_pass_filter filter (
+    resistor_capacitor_low_pass_filter #(.CLOCK_RATE(CLOCK_RATE)) filter (
         clk,
-        '1,
+        audio_clk_en,
         out,
         filtered_out
     );
@@ -32,24 +35,23 @@ module resistor_capacitor_low_pass_filter_tb();
 
     task run_times(int  times);
         for(int i = 0; i < times; i++) begin
-            #(i*(times/4));
+            #(i*(CYCLES_PER_SAMPLE));
             #1 clk = 0;
             #1 clk = 1;
             #1;
 
-            if(i%4 == 3)begin
-                audio_clk_en <= 1;
-            end else if(i%4 == 0) begin
+            if((i%CYCLES_PER_SAMPLE) == CYCLES_PER_SAMPLE-2)begin
+                audio_clk_en = 1;                
+            end else if(i%CYCLES_PER_SAMPLE == CYCLES_PER_SAMPLE-1) begin
+                audio_clk_en = 0;
                 $fwrite(file,"%d\n", filtered_out);
-            end  else begin
-                audio_clk_en <= 0;                
             end
 
         end
     endtask
 
 
-    localparam steps = 6000;
+    localparam steps = CYCLES_PER_SAMPLE * 1500;
     initial begin
         file = $fopen("resistor_capacitor_low_pass_filter.csv","wb");
         #1 v_control = 1 <<< 16 - 1;

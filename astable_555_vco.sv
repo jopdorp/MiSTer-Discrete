@@ -52,13 +52,13 @@ module astable_555_vco#(
     input[15:0] v_control,
     output reg[15:0] out = 0
 );
-    localparam longint VCC = 65535;
+    localparam VCC = 65535;
     localparam ln2_16_SHIFTED = 45426;
-    localparam longint C_R2_ln2_22_SHIFTED = C_35_SHIFTED * R2 * ln2_16_SHIFTED >>> 29;
-    localparam longint C_R1_R2_35_SHIFTED = C_35_SHIFTED * (R1 + R2);
-    localparam CYCLES_LOW = C_R2_ln2_22_SHIFTED * CLOCK_RATE >>> 22;
+    localparam longint C_R2_ln2_27_SHIFTED = C_35_SHIFTED * R2 * ln2_16_SHIFTED >>> 24;
+    localparam C_R1_R2_35_SHIFTED = C_35_SHIFTED * (R1 + R2);
+    localparam CYCLES_LOW = C_R2_ln2_27_SHIFTED * CLOCK_RATE >>> 27;
 
-    wire[31:0] v_control_32_bits;
+    wire[15:0] v_control_safe;
     wire[11:0] ln_vc_vcc_vc_8_shifted;
     reg[23:0] to_log_8_shifted = 0;
     
@@ -71,14 +71,14 @@ module astable_555_vco#(
     reg[63:0] WAVE_LENGTH;
     reg[62:0] CYCLES_HIGH;
 
-    assign v_control_32_bits = v_control < 65531 ? v_control : 65531;
+    assign v_control_safe = v_control < 65535 ? v_control : 65535;
 
     assign WAVE_LENGTH = CYCLES_HIGH + CYCLES_LOW;
 
     reg[63:0] wave_length_counter = 0;
 
     always @(posedge clk) begin
-        to_log_8_shifted <= (1 <<< 8) + (v_control_32_bits <<< 8) / (2 * (VCC - v_control_32_bits));
+        to_log_8_shifted <= (1 <<< 4) + (v_control_safe <<< 4) / (2 * (VCC - v_control_safe)) <<< 4;
         CYCLES_HIGH <= (C_R1_R2_35_SHIFTED * ln_vc_vcc_vc_8_shifted * CLOCK_RATE) >>> 43; // C⋅(R1+R2)⋅ln(1+v_control/(2*(VCC−v_control)))
 
         if(wave_length_counter < WAVE_LENGTH)begin

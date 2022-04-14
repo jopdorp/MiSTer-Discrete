@@ -11,6 +11,8 @@ module natural_log(input clk, input[23:0] in_8_shifted, output reg[11:0] out_8_s
     localparam RATIO_16_SHIFTED = 45426; // 1 / log2(e)
 
     wire[11:0] log2_x;
+
+    // TODO: use more precise implementation of log2
     Log2highacc log2(
         .DIN_8_shifted(in_8_shifted < 24'h104 ? 24'h104 : in_8_shifted), //This implementation of log2 doesn't support input 1 or smaller
         .clk(clk),
