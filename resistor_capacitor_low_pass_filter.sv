@@ -17,7 +17,7 @@ module resistor_capacitor_low_pass_filter #(
     input clk,
     input audio_clk_en,
     input[15:0] in,
-    output reg[15:0] out
+    output reg[15:0] out = 0
 );
     localparam DELTA_T_32_SHIFTED = (1 <<< 32) / SAMPLE_RATE;
     localparam R_C_32_SHIFTED = R * C_35_SHIFTED >>> 3;
@@ -31,8 +31,8 @@ module resistor_capacitor_low_pass_filter #(
     initial begin
         reg[7:0] i;
         for (i = 0; i < HISTORY_LENGTH; i = i + 1) begin
-            input_history[i] = 1 <<< 14;
-            output_history[i] = 1 <<< 14;
+            input_history[i] = 0;
+            output_history[i] = 0;
             c = 1;
         end
     end

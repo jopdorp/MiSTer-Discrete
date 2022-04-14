@@ -15,7 +15,7 @@ module resistor_capacitor_low_pass_filter #(
     input clk,
     input audio_clk_en,
     input[31:0] in,
-    output reg[15:0] out = 0
+    output reg signed[15:0] out = 0
 );
 
     localparam TIME_STEP_35_SHIFTED = (1 <<< 35) / CLOCK_RATE;

@@ -18,6 +18,7 @@
  *  It looks like the above formula is to obtain the SWITCHING feequency.
  *  The actualy frequency is twice lower.
  *
+ *
  *        |\        |\
  *        | \       | \
  *     +--|  >o--+--|-->o--+-------> out
@@ -36,7 +37,7 @@ module invertor_square_wave_oscilator#(
     parameter CLOCK_RATE = 50000000,
     parameter SAMPLE_RATE = 48000,
     parameter R1 = 4300,
-    parameter C_16_SHIFTED = 655360 // 10 microfarad
+    parameter C_MICROFARADS_16_SHIFTED = 655360 // 10 microfarad
 ) (
     input clk,
     input audio_clk_en,
@@ -44,7 +45,7 @@ module invertor_square_wave_oscilator#(
 );
     localparam longint R1_K_OHM_16_SHIFTED = R1 * 16777 >>> 8; // 1/1000 <<< 24 = 16777
     localparam CONSTANT_RATIO_16_SHIFTED = 14895; // 1/2.2/2 * 2 ^ 16
-    localparam longint FREQUENCY_16_SHIFTED = CONSTANT_RATIO_16_SHIFTED * (R1_K_OHM_16_SHIFTED * C_16_SHIFTED) >>> 32;
+    localparam longint FREQUENCY_16_SHIFTED = CONSTANT_RATIO_16_SHIFTED * (R1_K_OHM_16_SHIFTED * C_MICROFARADS_16_SHIFTED) >>> 32;
     localparam WAVE_LENGTH = (CLOCK_RATE <<< 16) / FREQUENCY_16_SHIFTED;
     localparam HALF_WAVE_LENGTH = WAVE_LENGTH >>> 1;
 

@@ -17,23 +17,23 @@ module resistor_capacitor_high_pass_filter #(
     input clk,
     input audio_clk_en,
     input[15:0] in,
-    output reg[15:0] out
+    output reg[15:0] out = 0
 );
     localparam DELTA_T_32_SHIFTED = (1 <<< 32) / SAMPLE_RATE;
     localparam R_C_32_SHIFTED = R * C_35_SHIFTED >>> 3;
     localparam SMOOTHING_FACTOR_ALPHA_16_SHIFTED = (R_C_32_SHIFTED <<< 16) / (R_C_32_SHIFTED + DELTA_T_32_SHIFTED);
-    parameter HISTORY_LENGTH = CLOCK_RATE / SAMPLE_RATE;
+    localparam HISTORY_LENGTH = CLOCK_RATE / SAMPLE_RATE;
 
     reg[15:0] input_history[HISTORY_LENGTH-1:0];
     reg[15:0] output_history[HISTORY_LENGTH-1:0];
-    reg[23:0] c;
+
+    reg[23:0] c = 2;
 
     initial begin
         reg[7:0] i;
         for (i = 0; i < HISTORY_LENGTH; i = i + 1) begin
-            input_history[i] = 1 <<< 14;
-            output_history[i] = 1 <<< 14;
-            c = 2;
+            input_history[i] = 0;
+            output_history[i] = 0;
         end
     end
 
