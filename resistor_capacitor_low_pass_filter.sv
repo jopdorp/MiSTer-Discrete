@@ -54,12 +54,12 @@ module resistor_capacitor_low_pass_filter #(
         end else begin
             if (c < HISTORY_LENGTH) begin
                 c <= c + 1;
-                output_history[c] <= get_uppdated_sample(output_history[c-1], input_history[c]);
+                output_history[c] <= get_updated_sample(output_history[c-1], input_history[c]);
             end
         end
     end
     
-    function reg[15:0] get_uppdated_sample(reg[15:0] previous_out, in);
+    function reg[15:0] get_updated_sample(reg[15:0] previous_out, in);
         return previous_out + (SMOOTHING_FACTOR_ALPHA_16_SHIFTED * (in - previous_out) >>> 16);
     endfunction
 
