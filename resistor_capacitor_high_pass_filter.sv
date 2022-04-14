@@ -12,7 +12,7 @@ module resistor_capacitor_high_pass_filter #(
     parameter CLOCK_RATE = 50000000,
     parameter SAMPLE_RATE = 48000,
     parameter R = 47000,
-    parameter C_35_SHIFTED = 1615 // 0.000000047 farads <<< 35 
+    parameter C_35_SHIFTED = 113387 // 0.0000033 farads <<< 35 
 ) ( 
     input clk,
     input audio_clk_en,
