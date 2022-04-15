@@ -88,7 +88,7 @@ module astable_555_vco#(
         end
 
         if(audio_clk_en)begin
-            out <= {16{wave_length_counter < CYCLES_HIGH}};
+            out <= wave_length_counter < CYCLES_HIGH ? 32767 : 0;
         end
     end
 endmodule

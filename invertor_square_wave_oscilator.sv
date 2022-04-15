@@ -41,7 +41,7 @@ module invertor_square_wave_oscilator#(
 ) (
     input clk,
     input audio_clk_en,
-    output reg[15:0] out = 0
+    output reg signed[15:0] out = 0
 );
     localparam longint R1_K_OHM_16_SHIFTED = R1 * 16777 >>> 8; // 1/1000 <<< 24 = 16777
     localparam CONSTANT_RATIO_16_SHIFTED = 14895; // 1/2.2/2 * 2 ^ 16
@@ -59,7 +59,7 @@ module invertor_square_wave_oscilator#(
         end
 
         if (audio_clk_en) begin
-            out <=  {16{wave_length_counter < HALF_WAVE_LENGTH}};
+            out <=  {15{wave_length_counter < HALF_WAVE_LENGTH}};
         end
     end
 endmodule

@@ -24,8 +24,8 @@ module resistor_capacitor_high_pass_filter #(
     localparam signed SMOOTHING_FACTOR_ALPHA_16_SHIFTED = (R_C_32_SHIFTED <<< 16) / (R_C_32_SHIFTED + DELTA_T_32_SHIFTED);
     localparam HISTORY_LENGTH = CLOCK_RATE / SAMPLE_RATE;
 
-    reg[15:0] input_history[HISTORY_LENGTH-1:0];
-    reg[15:0] output_history[HISTORY_LENGTH-1:0];
+    reg signed[15:0] input_history[HISTORY_LENGTH-1:0];
+    reg signed[15:0] output_history[HISTORY_LENGTH-1:0];
 
     reg[23:0] c = 2;
 

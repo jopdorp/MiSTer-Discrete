@@ -10,9 +10,9 @@ module resistor_capacitor_low_pass_filter_tb();
 
     reg clk = 0;
     reg audio_clk_en = 0;
-    reg[15:0] v_control = 0;
-    wire[15:0] out;
-    wire[15:0] filtered_out;
+    reg signed[15:0] v_control = 0;
+    wire signed[15:0] out;
+    wire signed[15:0] filtered_out;
     localparam CLOCK_RATE = 1000000;
     localparam SAMPLE_RATE = 48000;
     localparam CYCLES_PER_SAMPLE = CLOCK_RATE / SAMPLE_RATE;
