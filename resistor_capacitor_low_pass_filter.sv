@@ -21,7 +21,7 @@ module resistor_capacitor_low_pass_filter #(
 );
     localparam DELTA_T_32_SHIFTED = (1 <<< 32) / SAMPLE_RATE;
     localparam R_C_32_SHIFTED = R * C_35_SHIFTED >>> 3;
-    localparam SMOOTHING_FACTOR_ALPHA_16_SHIFTED = (DELTA_T_32_SHIFTED <<< 16) / (R_C_32_SHIFTED + DELTA_T_32_SHIFTED);
+    localparam signed SMOOTHING_FACTOR_ALPHA_16_SHIFTED = (DELTA_T_32_SHIFTED <<< 16) / (R_C_32_SHIFTED + DELTA_T_32_SHIFTED);
     parameter HISTORY_LENGTH = CLOCK_RATE / SAMPLE_RATE;
 
     reg signed[15:0] input_history[HISTORY_LENGTH-1:0];
@@ -62,7 +62,7 @@ module resistor_capacitor_low_pass_filter #(
     end
     
     function reg[15:0] get_updated_sample(reg[15:0] previous_out, in);
-        return previous_out + (SMOOTHING_FACTOR_ALPHA_16_SHIFTED * (in - previous_out) >>> 16);
+        return previous_out + (SMOOTHING_FACTOR_ALPHA_16_SHIFTED * (in - previous_out) >> 16);
     endfunction
 
 endmodule
