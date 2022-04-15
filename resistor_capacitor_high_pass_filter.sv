@@ -16,12 +16,12 @@ module resistor_capacitor_high_pass_filter #(
 ) ( 
     input clk,
     input audio_clk_en,
-    input[15:0] in,
-    output reg[15:0] out = 0
+    input signed[15:0] in,
+    output reg signed[15:0] out = 0
 );
     localparam DELTA_T_32_SHIFTED = (1 <<< 32) / SAMPLE_RATE;
     localparam R_C_32_SHIFTED = R * C_35_SHIFTED >>> 3;
-    localparam SMOOTHING_FACTOR_ALPHA_16_SHIFTED = (R_C_32_SHIFTED <<< 16) / (R_C_32_SHIFTED + DELTA_T_32_SHIFTED);
+    localparam signed SMOOTHING_FACTOR_ALPHA_16_SHIFTED = (R_C_32_SHIFTED <<< 16) / (R_C_32_SHIFTED + DELTA_T_32_SHIFTED);
     localparam HISTORY_LENGTH = CLOCK_RATE / SAMPLE_RATE;
 
     reg[15:0] input_history[HISTORY_LENGTH-1:0];
@@ -61,8 +61,8 @@ module resistor_capacitor_high_pass_filter #(
         end
     end
     
-    function reg[15:0] get_updated_sample(reg[15:0] previous_out, in, previous_in);
-        return SMOOTHING_FACTOR_ALPHA_16_SHIFTED * (previous_out + in - previous_in) >>> 16;
+    function reg signed[15:0] get_updated_sample(reg signed[15:0] previous_out, in, previous_in);
+        return SMOOTHING_FACTOR_ALPHA_16_SHIFTED * (previous_out + in - previous_in) >> 16;
     endfunction
 
 endmodule

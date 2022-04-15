@@ -62,7 +62,7 @@ module resistor_capacitor_low_pass_filter #(
     end
     
     function reg[15:0] get_updated_sample(reg[15:0] previous_out, in);
-        return previous_out + (SMOOTHING_FACTOR_ALPHA_16_SHIFTED * (in - previous_out) >>> 16);
+        return previous_out + (SMOOTHING_FACTOR_ALPHA_16_SHIFTED * (in - previous_out) >> 16);
     endfunction
 
 endmodule
