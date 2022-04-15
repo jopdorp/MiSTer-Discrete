@@ -67,6 +67,8 @@ module astable_555_vco_tb();
         #1 run_times(steps);
         #1 v_control = 0;
         #1 run_times(steps);
+        #1 v_control = -1000;
+        #1 run_times(steps);
         $fclose(file);
     end
     
