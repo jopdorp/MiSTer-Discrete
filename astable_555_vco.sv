@@ -49,17 +49,17 @@ module astable_555_vco#(
 ) (
     input clk,
     input audio_clk_en,
-    input[15:0] v_control,
-    output reg[15:0] out = 0
+    input signed[15:0] v_control,
+    output reg signed[15:0] out = 0
 );
-    localparam VCC = 65535;
+    localparam VCC = 32767;
     localparam ln2_16_SHIFTED = 45426;
-    localparam longint C_R2_ln2_27_SHIFTED = C_35_SHIFTED * R2 * ln2_16_SHIFTED >>> 24;
+    localparam[63:0] C_R2_ln2_27_SHIFTED = C_35_SHIFTED * R2 * ln2_16_SHIFTED >>> 24;
     localparam C_R1_R2_35_SHIFTED = C_35_SHIFTED * (R1 + R2);
     localparam CYCLES_LOW = C_R2_ln2_27_SHIFTED * CLOCK_RATE >>> 27;
 
-    wire[15:0] v_control_safe;
-    wire[11:0] ln_vc_vcc_vc_8_shifted;
+    wire signed[15:0] v_control_safe;
+    wire [11:0] ln_vc_vcc_vc_8_shifted;
     reg[23:0] to_log_8_shifted = 0;
     
     natural_log natlog(
@@ -71,7 +71,7 @@ module astable_555_vco#(
     reg[63:0] WAVE_LENGTH;
     reg[62:0] CYCLES_HIGH;
 
-    assign v_control_safe = v_control < 65535 ? v_control : 65535;
+    assign v_control_safe = v_control < 32767 ? v_control : 32766;
 
     assign WAVE_LENGTH = CYCLES_HIGH + CYCLES_LOW;
 
@@ -88,7 +88,7 @@ module astable_555_vco#(
         end
 
         if(audio_clk_en)begin
-            out <= {16{wave_length_counter < CYCLES_HIGH}};
+            out <= {15{wave_length_counter < CYCLES_HIGH}};
         end
     end
 endmodule
