@@ -10,7 +10,7 @@ module invertor_square_wave_oscilator_tb();
 
     reg clk = 0;
     reg audio_clk_en = 1;
-    wire[15:0] out;
+    wire signed[15:0] out;
     invertor_square_wave_oscilator #(.CLOCK_RATE(48000)) osc (
         clk,
         audio_clk_en,
