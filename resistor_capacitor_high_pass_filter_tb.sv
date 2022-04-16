@@ -51,26 +51,26 @@ module resistor_capacitor_high_pass_filter_tb();
     endtask
 
 
-    localparam steps = CYCLES_PER_SAMPLE * 1500;
+    localparam steps = CYCLES_PER_SAMPLE * 3000;
     initial begin
         file = $fopen("resistor_capacitor_high_pass_filter.csv","wb");
-        #1 v_control = 32767;
-        #1 run_times(steps);
-        #1 v_control = 30000;
-        #1 run_times(steps);
-        #1 v_control = 25000;
-        #1 run_times(steps);
-        #1 v_control = 20000;
+        #1 v_control = 16384;
         #1 run_times(steps);
         #1 v_control = 15000;
         #1 run_times(steps);
+        #1 v_control = 12500;
+        #1 run_times(steps);
         #1 v_control = 10000;
+        #1 run_times(steps);
+        #1 v_control = 7500;
         #1 run_times(steps);
         #1 v_control = 5000;
         #1 run_times(steps);
         #1 v_control = 2500;
         #1 run_times(steps);
-        #1 v_control = 1000;
+        #1 v_control = 1250;
+        #1 run_times(steps);
+        #1 v_control = 500;
         #1 run_times(steps);
         #1 v_control = 0;
         #1 run_times(steps);

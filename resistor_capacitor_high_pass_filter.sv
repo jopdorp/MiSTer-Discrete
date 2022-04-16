@@ -11,9 +11,9 @@
  ********************************************************************************/
 module resistor_capacitor_high_pass_filter #(
     parameter CLOCK_RATE = 50000000,
-    parameter SAMPLE_RATE = 48000,
+    parameter SAMPLE_RATE = 48000,  // use a lower sample rates for integrators
     parameter R = 47000,
-    parameter C_35_SHIFTED = 113387 // 0.0000033 farads <<< 35 
+    parameter C_35_SHIFTED = 113387 // 0.0000033 farads <<< 35
 ) ( 
     input clk,
     input audio_clk_en,
@@ -24,7 +24,7 @@ module resistor_capacitor_high_pass_filter #(
     localparam R_C_32_SHIFTED = R * C_35_SHIFTED >>> 3;
     localparam signed SMOOTHING_FACTOR_ALPHA_16_SHIFTED = (R_C_32_SHIFTED <<< 16) / (R_C_32_SHIFTED + DELTA_T_32_SHIFTED);
     localparam HISTORY_LENGTH = CLOCK_RATE / SAMPLE_RATE;
-    localparam LEAKYNESS_16_SHIFTED = 65535 - (65535 / HISTORY_LENGTH * 8);
+    localparam LEAKYNESS_16_SHIFTED = 65535 - (65535 / HISTORY_LENGTH * 4);
 
     reg signed[15:0] input_history[HISTORY_LENGTH-1:0];
     reg signed[15:0] output_history[HISTORY_LENGTH-1:0];
@@ -51,8 +51,8 @@ module resistor_capacitor_high_pass_filter #(
     endgenerate
 
     always @(posedge clk) begin
+        input_history[HISTORY_LENGTH-1] <= in;
         if(audio_clk_en)begin
-            input_history[HISTORY_LENGTH-1] <= in;
             out <= output_history[HISTORY_LENGTH-1];
             c <= 2;
         end else begin

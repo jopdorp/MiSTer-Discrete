@@ -36,7 +36,8 @@ ports:
 * input wire[15:0] \<input name\>; // optinonal unsigned input signals
 * output reg[15:0] out; // unsigned output signal
 
-VCC, or v_plus is equivalent to {16{1'b1}} on the output or input signals.
+VCC, or v_plus is equivalent to {14{1'b1}} on the output or input signals.
+This leaves some room for voltages that are higher than VCC, caused by capacitors/filters;
 Ground, or v_ref is equivalent to 0 on the output or input signals.
 
 Each time audio_clk_en goes high, the modules set their outputs as a direct relationship between their individual current state and their input signals.

@@ -15,18 +15,23 @@ module dk_walk #(
     input walk_en,
     output reg signed[15:0] out = 0
 );
-    
+    wire integrator_en;
     wire signed[15:0] square_osc_out;
     wire signed[15:0] v_control;
     wire signed[15:0] mixer_input[1:0];
 
     wire signed[15:0] walk_en_5volts;
-    assign walk_en_5volts =  walk_en ? 'd27307 : 0;
-    assign mixer_input[0] = walk_en_5volts; // 2^16 * 5/12 = 27307 , for 5 volts
-    assign mixer_input[1] = square_osc_out; // 2^16 * 5/12 = 27307 , for 5 volts
+    assign walk_en_5volts =  walk_en ? 'd6826 : 0; // 2^14 * 5/12 = 6826 , for 5 volts
+    assign mixer_input[0] = walk_en_5volts; 
+    assign mixer_input[1] = square_osc_out;
+
+    localparam SAMPLE_RATE_SHIFT = 3;
+    localparam INTEGRATOR_SAMPLE_RATE = SAMPLE_RATE >>> SAMPLE_RATE_SHIFT;
+    reg[SAMPLE_RATE_SHIFT:0] integrator_en_divider = 0;
+    assign integrator_en = audio_clk_en && integrator_en_divider == 0;
 
 
-    wire signed[15:0] walk_en_filtered;
+    wire signed[31:0] walk_en_filtered;
     wire signed[15:0] astable_555_out;
 
     invertor_square_wave_oscilator#(
@@ -65,17 +70,19 @@ module dk_walk #(
 
     resistor_capacitor_high_pass_filter #(
         .CLOCK_RATE(CLOCK_RATE),
-        .SAMPLE_RATE(SAMPLE_RATE),
+        .SAMPLE_RATE(INTEGRATOR_SAMPLE_RATE),
         .R(10000),
         .C_35_SHIFTED(113387)
     ) filter1 (
         .clk(clk),
-        .audio_clk_en(audio_clk_en && astable_555_out > 1000),
+        .audio_clk_en(integrator_en && (astable_555_out > 1000)),
         .in(walk_en_5volts),
         .out(walk_en_filtered)
     );
 
-    reg signed[15:0] walk_enveloped = 0;
+    wire signed[15:0] walk_enveloped;
+    assign walk_enveloped = astable_555_out > 1000 ? walk_en_filtered : 0;
+    
     wire signed[15:0] walk_enveloped_high_passed;
 
     resistor_capacitor_high_pass_filter #(
@@ -106,9 +113,8 @@ module dk_walk #(
 
     always @(posedge clk) begin
         if(audio_clk_en)begin
+            integrator_en_divider = integrator_en_divider + 1;
             out <= walk_enveloped_band_passed;
-        end else begin
-            walk_enveloped <= walk_en_filtered * astable_555_out;
         end
     end
 

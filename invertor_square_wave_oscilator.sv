@@ -59,7 +59,7 @@ module invertor_square_wave_oscilator#(
         end
 
         if (audio_clk_en) begin
-            out <=  wave_length_counter < HALF_WAVE_LENGTH ? 32767 : 0;
+            out <=  wave_length_counter < HALF_WAVE_LENGTH ? 16384 : 0;
         end
     end
 endmodule

@@ -52,7 +52,7 @@ module astable_555_vco#(
     input signed[15:0] v_control,
     output reg signed[15:0] out = 0
 );
-    localparam VCC = 32767;
+    localparam VCC = 16384;
     localparam ln2_16_SHIFTED = 45426;
     localparam[63:0] C_R2_ln2_27_SHIFTED = C_35_SHIFTED * R2 * ln2_16_SHIFTED >>> 24;
     localparam C_R1_R2_35_SHIFTED = C_35_SHIFTED * (R1 + R2);
@@ -88,7 +88,7 @@ module astable_555_vco#(
         end
 
         if(audio_clk_en)begin
-            out <= wave_length_counter < CYCLES_HIGH ? 32767 : 0;
+            out <= wave_length_counter < CYCLES_HIGH ? 16384 : 0;
         end
     end
 endmodule
