@@ -6,6 +6,7 @@
  *  This program is free software under the terms of the GPLv3, see LICENCSE.txt
  *         
  *  based on https://en.wikipedia.org/wiki/Low-pass_filter
+ *  added leakyness based on this: https://dsp.stackexchange.com/a/12763
  * 
  ********************************************************************************/
 module resistor_capacitor_low_pass_filter #(
@@ -22,7 +23,9 @@ module resistor_capacitor_low_pass_filter #(
     localparam DELTA_T_32_SHIFTED = (1 <<< 32) / SAMPLE_RATE;
     localparam R_C_32_SHIFTED = R * C_35_SHIFTED >>> 3;
     localparam signed SMOOTHING_FACTOR_ALPHA_16_SHIFTED = (DELTA_T_32_SHIFTED <<< 16) / (R_C_32_SHIFTED + DELTA_T_32_SHIFTED);
-    parameter HISTORY_LENGTH = CLOCK_RATE / SAMPLE_RATE;
+    localparam HISTORY_LENGTH = CLOCK_RATE / SAMPLE_RATE;
+    localparam LEAKYNESS_11_SHIFTED = 2047 - (2047 / HISTORY_LENGTH * 8);
+
 
     reg signed[15:0] input_history[HISTORY_LENGTH-1:0];
     reg signed[15:0] output_history[HISTORY_LENGTH-1:0];
@@ -62,7 +65,7 @@ module resistor_capacitor_low_pass_filter #(
     end
     
     function reg[15:0] get_updated_sample(reg[15:0] previous_out, in);
-        return previous_out + (SMOOTHING_FACTOR_ALPHA_16_SHIFTED * (in - previous_out) >> 16);
+        return (LEAKYNESS_11_SHIFTED * previous_out >> 11) + (SMOOTHING_FACTOR_ALPHA_16_SHIFTED * (in - previous_out) >> 16);
     endfunction
 
 endmodule

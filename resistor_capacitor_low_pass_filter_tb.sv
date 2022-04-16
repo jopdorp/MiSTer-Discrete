@@ -45,6 +45,9 @@ module resistor_capacitor_low_pass_filter_tb();
             end else if(i%CYCLES_PER_SAMPLE == CYCLES_PER_SAMPLE-1) begin
                 audio_clk_en = 0;
                 $fwrite(file,"%d\n", filtered_out);
+                // $fwrite(file,"%d\n", filter.intermediate2);
+                // $fwrite(file,"%d\n", filter.intermediate2);
+                // $fwrite(file,"%d\n", filter.Ir_16_SHIFTED);
             end
 
         end
@@ -54,6 +57,8 @@ module resistor_capacitor_low_pass_filter_tb();
     localparam steps = CYCLES_PER_SAMPLE * 3000;
     initial begin
         file = $fopen("resistor_capacitor_low_pass_filter.csv","wb");
+        // $fwrite(file,"%d\n", filter.TIME_STEP_35_SHIFTED);
+        // $fwrite(file,"%d\n", filter.C_12_RIGHT_SHIFTED);
         #1 v_control = 32767;
         #1 run_times(steps);
         #1 v_control = 30000;

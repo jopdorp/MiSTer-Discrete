@@ -13,7 +13,7 @@ module resistor_capacitor_high_pass_filter_tb();
     reg signed[15:0] v_control = 0;
     wire signed[15:0] out;
     wire signed[15:0] filtered_out;
-    localparam CLOCK_RATE = 1000000;
+    localparam CLOCK_RATE = 4000000;
     localparam SAMPLE_RATE = 48000;
     localparam CYCLES_PER_SAMPLE = CLOCK_RATE / SAMPLE_RATE;
 
@@ -54,6 +54,8 @@ module resistor_capacitor_high_pass_filter_tb();
     localparam steps = CYCLES_PER_SAMPLE * 1500;
     initial begin
         file = $fopen("resistor_capacitor_high_pass_filter.csv","wb");
+        $fwrite(file,"%d\n", filter.HISTORY_LENGTH);
+        $fwrite(file,"%d\n", filter.LEAKYNESS_11_SHIFTED);
         #1 v_control = 32767;
         #1 run_times(steps);
         #1 v_control = 30000;

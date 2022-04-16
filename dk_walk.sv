@@ -16,24 +16,24 @@ module dk_walk #(
     output reg signed[15:0] out = 0
 );
     
-    wire[15:0] square_osc_out;
-    wire[15:0] v_control;
-    wire[15:0] mixer_input[1:0];
+    wire signed[15:0] square_osc_out;
+    wire signed[15:0] v_control;
+    wire signed[15:0] mixer_input[1:0];
 
-    wire[15:0] walk_en_5volts;
+    wire signed[15:0] walk_en_5volts;
     assign walk_en_5volts =  walk_en ? 'd27307 : 0;
     assign mixer_input[0] = walk_en_5volts; // 2^16 * 5/12 = 27307 , for 5 volts
     assign mixer_input[1] = square_osc_out; // 2^16 * 5/12 = 27307 , for 5 volts
 
 
-    wire[15:0] walk_en_filtered;
-    wire[15:0] astable_555_out;
+    wire signed[15:0] walk_en_filtered;
+    wire signed[15:0] astable_555_out;
 
     invertor_square_wave_oscilator#(
         .CLOCK_RATE(CLOCK_RATE),
         .SAMPLE_RATE(SAMPLE_RATE),
         .R1(4300),
-        .C_16_SHIFTED(655360)
+        .C_MICROFARADS_16_SHIFTED(655360)
     ) square (
         .clk(clk),
         .audio_clk_en(audio_clk_en),
@@ -75,8 +75,8 @@ module dk_walk #(
         .out(walk_en_filtered)
     );
 
-    reg[15:0] walk_enveloped = 0;
-    wire[15:0] walk_enveloped_high_passed;
+    reg signed[15:0] walk_enveloped = 0;
+    wire signed[15:0] walk_enveloped_high_passed;
 
     resistor_capacitor_high_pass_filter #(
         .CLOCK_RATE(CLOCK_RATE),
@@ -90,7 +90,7 @@ module dk_walk #(
         walk_enveloped_high_passed
     );
 
-    wire[15:0] walk_enveloped_band_passed;
+    wire signed[15:0] walk_enveloped_band_passed;
 
     resistor_capacitor_low_pass_filter #(
         .CLOCK_RATE(CLOCK_RATE),
@@ -103,8 +103,6 @@ module dk_walk #(
         walk_enveloped_high_passed,
         walk_enveloped_band_passed
     );
-
-    wire[15:0] walk_normalized = (walk_en_filtered - (2 <<< 15));
 
     always @(posedge clk) begin
         if(audio_clk_en)begin
