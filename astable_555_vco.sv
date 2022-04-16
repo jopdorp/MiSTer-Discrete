@@ -78,7 +78,7 @@ module astable_555_vco#(
     reg[63:0] wave_length_counter = 0;
 
     always @(posedge clk) begin
-        to_log_8_shifted <= (1 << 4) + (v_control_safe << 4) / (2 * (VCC - v_control_safe)) << 4;
+        to_log_8_shifted <= (1 << 8) + (v_control_safe << 8) / (2 * (VCC - v_control_safe));
         CYCLES_HIGH <= (C_R1_R2_35_SHIFTED * ln_vc_vcc_vc_8_shifted * CLOCK_RATE) >>> 43; // C⋅(R1+R2)⋅ln(1+v_control/(2*(VCC−v_control)))
 
         if(wave_length_counter < WAVE_LENGTH)begin

@@ -31,7 +31,7 @@ module dk_walk #(
     assign integrator_en = audio_clk_en && integrator_en_divider == 0;
 
 
-    wire signed[31:0] walk_en_filtered;
+    wire signed[15:0] walk_en_filtered;
     wire signed[15:0] astable_555_out;
 
     invertor_square_wave_oscilator#(
@@ -55,6 +55,20 @@ module dk_walk #(
         .out(v_control)
     );
 
+    wire signed[15:0] v_control_filtered;
+
+    resistor_capacitor_low_pass_filter #(
+        .CLOCK_RATE(CLOCK_RATE),
+        .SAMPLE_RATE(SAMPLE_RATE),
+        .R(1200),
+        .C_35_SHIFTED(113387)
+    ) filter4 (
+        clk,
+        audio_clk_en,
+        v_control,
+        v_control_filtered
+    );
+
     astable_555_vco #(
         .CLOCK_RATE(CLOCK_RATE),
         .SAMPLE_RATE(SAMPLE_RATE),
@@ -64,7 +78,7 @@ module dk_walk #(
     ) vco (
         .clk(clk),
         .audio_clk_en(audio_clk_en),
-        .v_control(v_control),
+        .v_control(v_control_filtered),
         .out(astable_555_out)
     );
 

@@ -24,7 +24,7 @@ module resistor_capacitor_low_pass_filter #(
     localparam R_C_32_SHIFTED = R * C_35_SHIFTED >>> 3;
     localparam signed SMOOTHING_FACTOR_ALPHA_16_SHIFTED = (DELTA_T_32_SHIFTED <<< 16) / (R_C_32_SHIFTED + DELTA_T_32_SHIFTED);
     localparam HISTORY_LENGTH = CLOCK_RATE / SAMPLE_RATE;
-    localparam LEAKYNESS_16_SHIFTED = 65535 - (65535 / HISTORY_LENGTH); //TODO: figure out what the best amount of leakyness is
+    localparam signed LEAKYNESS_16_SHIFTED = 65535 - (65535 / HISTORY_LENGTH / 4); //TODO: figure out what the best amount of leakyness is
 
 
     reg signed[15:0] input_history[HISTORY_LENGTH-1:0];

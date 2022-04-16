@@ -36,15 +36,6 @@ module dk_walk_tb();
                 audio_clk_en = 1;                
             end else if(i%CYCLES_PER_SAMPLE == CYCLES_PER_SAMPLE-1) begin
                 audio_clk_en = 0;
-                // $fwrite(file,"%d\n", walk.square_osc_out);
-                // $fwrite(file,"%d\n", walk.v_control);
-                // $fwrite(file,"%d\n", walk.astable_555_out);
-                // $fwrite(file,"%d\n", walk.walk_en_5volts);
-                // $fwrite(file,"integrator_en %d\n", walk.integrator_en);
-                // $fwrite(file,"audio_clk_en %d\n", walk.audio_clk_en);
-                // $fwrite(file,"%d\n", walk.walk_en_filtered);
-                // $fwrite(file,"%d\n", walk.walk_enveloped);
-                // $fwrite(file,"%d\n", walk.walk_enveloped_high_passed);
                 $fwrite(file,"%d\n", walk_out);
             end
 
@@ -55,23 +46,19 @@ module dk_walk_tb();
     localparam steps = CYCLES_PER_SAMPLE * 4000;
     initial begin
         file = $fopen("dk_walk.csv","wb");
-        #1 walk_en = 0;
-        #1 run_times(steps);
         #1 walk_en = 1;
         #1 run_times(steps);
         #1 walk_en = 0;
+        #1 run_times(steps);
+        #1 walk_en = 1;
         #1 run_times(steps * 2);
-        #1 walk_en = 1;
-        #1 run_times(steps);
         #1 walk_en = 0;
+        #1 run_times(steps);
+        #1 walk_en = 1;
         #1 run_times(steps * 2);
-        #1 walk_en = 1;
-        #1 run_times(steps);
         #1 walk_en = 0;
-        #1 run_times(steps * 2);
-        #1 walk_en = 1;
         #1 run_times(steps);
-        #1 walk_en = 0;
+        #1 walk_en = 1;
         #1 run_times(steps * 2);
         $fclose(file);
     end
