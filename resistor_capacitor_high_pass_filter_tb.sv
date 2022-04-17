@@ -24,7 +24,7 @@ module resistor_capacitor_high_pass_filter_tb();
         .out(out)
     );
 
-    resistor_capacitor_high_pass_filter #(.CLOCK_RATE(CLOCK_RATE)) filter (
+    resistor_capacitor_high_pass_filter filter (
         clk,
         audio_clk_en,
         out,

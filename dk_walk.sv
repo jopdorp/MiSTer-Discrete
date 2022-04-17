@@ -15,21 +15,15 @@ module dk_walk #(
     input walk_en,
     output reg signed[15:0] out = 0
 );
-    wire integrator_en;
     wire signed[15:0] square_osc_out;
     wire signed[15:0] v_control;
     wire signed[15:0] mixer_input[1:0];
 
     wire signed[15:0] walk_en_5volts;
-    assign walk_en_5volts =  walk_en ? 'd6826 : 0; // 2^14 * 5/12 = 6826 , for 5 volts
-    assign mixer_input[0] = walk_en_5volts; 
-    assign mixer_input[1] = square_osc_out;
+    assign walk_en_5volts =  walk_en ? 0 : 'd6826; // 2^14 * 5/12 = 6826 , for 5 volts
 
     localparam SAMPLE_RATE_SHIFT = 3;
     localparam INTEGRATOR_SAMPLE_RATE = SAMPLE_RATE >>> SAMPLE_RATE_SHIFT;
-    reg[SAMPLE_RATE_SHIFT:0] integrator_en_divider = 0;
-    assign integrator_en = audio_clk_en && integrator_en_divider == 0;
-
 
     wire signed[15:0] walk_en_filtered;
     wire signed[15:0] astable_555_out;
@@ -55,18 +49,26 @@ module dk_walk #(
         .out(v_control)
     );
 
-    wire signed[15:0] v_control_filtered;
-
     resistor_capacitor_low_pass_filter #(
-        .CLOCK_RATE(CLOCK_RATE),
         .SAMPLE_RATE(SAMPLE_RATE),
-        .R(1200),
+        .R(11200),
         .C_35_SHIFTED(113387)
     ) filter4 (
         clk,
         audio_clk_en,
-        v_control,
-        v_control_filtered
+        walk_en_5volts,
+        mixer_input[0]
+    );
+
+    resistor_capacitor_low_pass_filter #(
+        .SAMPLE_RATE(SAMPLE_RATE),
+        .R(13200),
+        .C_35_SHIFTED(113387)
+    ) filter5 (
+        clk,
+        audio_clk_en,
+        square_osc_out,
+        mixer_input[1]
     );
 
     astable_555_vco #(
@@ -78,29 +80,27 @@ module dk_walk #(
     ) vco (
         .clk(clk),
         .audio_clk_en(audio_clk_en),
-        .v_control(v_control_filtered),
+        .v_control(v_control),
         .out(astable_555_out)
     );
 
     resistor_capacitor_high_pass_filter #(
-        .CLOCK_RATE(CLOCK_RATE),
-        .SAMPLE_RATE(INTEGRATOR_SAMPLE_RATE),
+        .SAMPLE_RATE(SAMPLE_RATE),
         .R(10000),
         .C_35_SHIFTED(113387)
     ) filter1 (
         .clk(clk),
-        .audio_clk_en(integrator_en && (astable_555_out > 1000)),
+        .audio_clk_en(audio_clk_en),
         .in(walk_en_5volts),
         .out(walk_en_filtered)
     );
 
     wire signed[15:0] walk_enveloped;
-    assign walk_enveloped = astable_555_out > 1000 ? walk_en_filtered : 0;
+    assign walk_enveloped = astable_555_out > 100 ? walk_en_filtered : 0;
     
     wire signed[15:0] walk_enveloped_high_passed;
 
     resistor_capacitor_high_pass_filter #(
-        .CLOCK_RATE(CLOCK_RATE),
         .SAMPLE_RATE(SAMPLE_RATE),
         .R(5600),
         .C_35_SHIFTED(161491)
@@ -114,7 +114,6 @@ module dk_walk #(
     wire signed[15:0] walk_enveloped_band_passed;
 
     resistor_capacitor_low_pass_filter #(
-        .CLOCK_RATE(CLOCK_RATE),
         .SAMPLE_RATE(SAMPLE_RATE),
         .R(5600),
         .C_35_SHIFTED(1614)
@@ -127,7 +126,6 @@ module dk_walk #(
 
     always @(posedge clk) begin
         if(audio_clk_en)begin
-            integrator_en_divider = integrator_en_divider + 1;
             out <= walk_enveloped_band_passed;
         end
     end

@@ -12,7 +12,7 @@ module dk_walk_tb();
     reg audio_clk_en = 0;
     reg walk_en = 0;
     wire signed[15:0] walk_out;
-    localparam CLOCK_RATE = 1000000;
+    localparam CLOCK_RATE = 120000;
     localparam SAMPLE_RATE = 48000;
     localparam CYCLES_PER_SAMPLE = CLOCK_RATE / SAMPLE_RATE;
 
@@ -47,19 +47,35 @@ module dk_walk_tb();
     initial begin
         file = $fopen("dk_walk.csv","wb");
         #1 walk_en = 1;
-        #1 run_times(steps);
+        #1 run_times(steps * 4);
         #1 walk_en = 0;
         #1 run_times(steps);
         #1 walk_en = 1;
-        #1 run_times(steps * 2);
+        #1 run_times(steps * 4);
         #1 walk_en = 0;
         #1 run_times(steps);
         #1 walk_en = 1;
-        #1 run_times(steps * 2);
+        #1 run_times(steps * 4);
         #1 walk_en = 0;
         #1 run_times(steps);
         #1 walk_en = 1;
-        #1 run_times(steps * 2);
+        #1 run_times(steps * 4);
+        #1 walk_en = 0;
+        #1 run_times(steps);
+        #1 walk_en = 1;
+        #1 run_times(steps * 4);
+        #1 walk_en = 0;
+        #1 run_times(steps);
+        #1 walk_en = 1;
+        #1 run_times(steps * 4);
+        #1 walk_en = 0;
+        #1 run_times(steps);
+        #1 walk_en = 1;
+        #1 run_times(steps * 4);
+        #1 walk_en = 0;
+        #1 run_times(steps);
+        #1 walk_en = 1;
+        #1 run_times(steps * 4);
         $fclose(file);
     end
 
