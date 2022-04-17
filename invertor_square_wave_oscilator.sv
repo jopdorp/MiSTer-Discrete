@@ -48,10 +48,8 @@ module invertor_square_wave_oscilator#(
     localparam longint FREQUENCY_16_SHIFTED = CONSTANT_RATIO_16_SHIFTED * (R1_K_OHM_16_SHIFTED * C_MICROFARADS_16_SHIFTED) >>> 32;
     localparam WAVE_LENGTH = (CLOCK_RATE <<< 16) / FREQUENCY_16_SHIFTED;
     localparam HALF_WAVE_LENGTH = WAVE_LENGTH >>> 1;
-    // localparam C_FARADS_35_SHIFTED = C_MICROFARADS_16_SHIFTED <<< 14 / 1000000;
 
     reg [63:0] wave_length_counter = 0;
-
 
     reg signed[15:0] unfiltered_out = 0;
 

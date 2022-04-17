@@ -65,6 +65,7 @@ module dk_walk #(
 
     wire signed[15:0] v_control_filtered;
 
+    //TODO: properly calculate influence of 555 timer on input voltage
     resistor_capacitor_low_pass_filter #(
         .SAMPLE_RATE(SAMPLE_RATE),
         .R(1200),
@@ -72,7 +73,7 @@ module dk_walk #(
     ) filter4 (
         clk,
         audio_clk_en,
-        v_control,
+        (v_control >> 2) + (v_control >> 4) + (v_control >> 5) + (v_control >> 6) + 16'd6900,
         v_control_filtered
     );
 
@@ -96,7 +97,7 @@ module dk_walk #(
     ) filter1 (
         .clk(clk),
         .audio_clk_en(audio_clk_en),
-        .in(walk_en_5volts),
+        .in(walk_en_5volts_filtered),
         .out(walk_en_filtered)
     );
 

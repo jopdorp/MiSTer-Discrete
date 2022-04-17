@@ -36,7 +36,7 @@ module dk_walk_tb();
                 audio_clk_en = 1;                
             end else if(i%CYCLES_PER_SAMPLE == CYCLES_PER_SAMPLE-1) begin
                 audio_clk_en = 0;
-                $fwrite(file,"%d\n", walk.square_osc_out);
+                $fwrite(file,"%d\n", walk_out);
             end
 
         end
