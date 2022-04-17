@@ -43,7 +43,7 @@ module dk_walk_tb();
     endtask
 
 
-    localparam steps = CYCLES_PER_SAMPLE * 3000;
+    localparam steps = CYCLES_PER_SAMPLE * 4000;
     initial begin
         file = $fopen("dk_walk.csv","wb");
         #1 walk_en = 1;
@@ -76,6 +76,46 @@ module dk_walk_tb();
         #1 run_times(steps);
         #1 walk_en = 1;
         #1 run_times(steps * 4);
+        #1 walk_en = 0;
+        #1 run_times(steps);
+        #1 walk_en = 1;
+        #1 run_times(steps);
+        #1 walk_en = 0;
+        #1 run_times(steps);
+        #1 walk_en = 1;
+        #1 run_times(steps * 2);
+        #1 walk_en = 0;
+        #1 run_times(steps);
+        #1 walk_en = 1;
+        #1 run_times(steps * 2);
+        #1 walk_en = 0;
+        #1 run_times(steps);
+        #1 walk_en = 1;
+        #1 run_times(steps * 2);
+        #1 walk_en = 0;
+        #1 run_times(steps);
+        #1 walk_en = 1;
+        #1 run_times(steps * 2);
+        #1 walk_en = 0;
+        #1 run_times(steps);
+        #1 walk_en = 1;
+        #1 run_times(steps * 2);
+        #1 walk_en = 0;
+        #1 run_times(steps);
+        #1 walk_en = 1;
+        #1 run_times(steps * 2);
+        #1 walk_en = 0;
+        #1 run_times(steps);
+        #1 walk_en = 1;
+        #1 run_times(steps * 2);
+        #1 walk_en = 0;
+        #1 run_times(steps);
+        #1 walk_en = 1;
+        #1 run_times(steps * 2);
+        #1 walk_en = 0;
+        #1 run_times(steps);
+        #1 walk_en = 1;
+        #1 run_times(steps * 2);
         $fclose(file);
     end
 

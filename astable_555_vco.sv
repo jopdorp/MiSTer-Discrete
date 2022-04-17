@@ -79,7 +79,6 @@ module astable_555_vco#(
 
     reg[15:0] unfiltered_out;
 
-    // filter to simulate transfer rate of invertors
     rate_of_change_limiter #(
         .SAMPLE_RATE(SAMPLE_RATE),
         .MAX_CHANGE_RATE(200000)

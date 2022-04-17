@@ -25,7 +25,8 @@ module dk_walk #(
 
     // filter to simulate transfer rate of invertors
     rate_of_change_limiter #(
-        .SAMPLE_RATE(SAMPLE_RATE)
+        .SAMPLE_RATE(SAMPLE_RATE),
+        .MAX_CHANGE_RATE(1000)
     ) slew_rate (
         clk,
         audio_clk_en,
@@ -67,7 +68,7 @@ module dk_walk #(
 
     resistor_capacitor_low_pass_filter #(
         .SAMPLE_RATE(SAMPLE_RATE),
-        .R(2500), //TODO actual value is 1200, but 2500 has a closer response, probably need a better low pass implementation
+        .R(3000), //TODO actual value is 1200, but 3000 has a closer response, probably need a better low pass implementation
         .C_35_SHIFTED(113387)
     ) filter4 (
         clk,
@@ -92,7 +93,7 @@ module dk_walk #(
 
     resistor_capacitor_high_pass_filter #(
         .SAMPLE_RATE(SAMPLE_RATE),
-        .R(10000),
+        .R(15000), // not sure what this should be
         .C_35_SHIFTED(113387)
     ) filter1 (
         .clk(clk),
@@ -121,7 +122,7 @@ module dk_walk #(
 
     resistor_capacitor_low_pass_filter #(
         .SAMPLE_RATE(SAMPLE_RATE),
-        .R(5600),
+        .R(2500), // actually 5.6K
         .C_35_SHIFTED(1614)
     ) filter3 (
         clk,
@@ -130,9 +131,15 @@ module dk_walk #(
         walk_enveloped_band_passed
     );
 
+
+
     always @(posedge clk) begin
         if(audio_clk_en)begin
-            out <= walk_enveloped_band_passed;
+            if(walk_enveloped_band_passed > 0) begin //TODO: hack to simulate diode connection coming from ground
+                out <= walk_enveloped_band_passed;
+            end else begin
+                out <= walk_enveloped_band_passed / 2;
+            end
         end
     end
 
