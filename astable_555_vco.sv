@@ -50,7 +50,7 @@ module astable_555_vco#(
     input clk,
     input audio_clk_en,
     input signed[15:0] v_control,
-    output reg signed[15:0] out = 0
+    output signed[15:0] out
 );
     localparam VCC = 16384;
     localparam ln2_16_SHIFTED = 45426;
@@ -77,6 +77,19 @@ module astable_555_vco#(
 
     reg[63:0] wave_length_counter = 0;
 
+    reg[15:0] unfiltered_out;
+
+    // filter to simulate transfer rate of invertors
+    rate_of_change_limiter #(
+        .SAMPLE_RATE(SAMPLE_RATE),
+        .MAX_CHANGE_RATE(200000)
+    ) slew_rate (
+        clk,
+        audio_clk_en,
+        unfiltered_out,
+        out
+    );
+
     always @(posedge clk) begin
         to_log_8_shifted <= (1 << 8) + (v_control_safe << 8) / (2 * (VCC - v_control_safe));
         CYCLES_HIGH <= (C_R1_R2_35_SHIFTED * ln_vc_vcc_vc_8_shifted * CLOCK_RATE) >>> 43; // C⋅(R1+R2)⋅ln(1+v_control/(2*(VCC−v_control)))
@@ -88,7 +101,7 @@ module astable_555_vco#(
         end
 
         if(audio_clk_en)begin
-            out <= wave_length_counter < CYCLES_HIGH ? 16384 : 0;
+            unfiltered_out <= wave_length_counter < CYCLES_HIGH ? 16384 : 0;
         end
     end
 endmodule

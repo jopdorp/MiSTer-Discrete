@@ -45,7 +45,7 @@ module dk_walk #(
     invertor_square_wave_oscilator#(
         .CLOCK_RATE(CLOCK_RATE),
         .SAMPLE_RATE(SAMPLE_RATE),
-        .R1(4300),
+        .R1(4100),// sligtly slower R, to simulate slower freq due to transfer rate of inverters
         .C_MICROFARADS_16_SHIFTED(655360)
     ) square (
         .clk(clk),
@@ -65,18 +65,18 @@ module dk_walk #(
 
     wire signed[15:0] v_control_filtered;
 
-    //TODO: properly calculate influence of 555 timer on input voltage
     resistor_capacitor_low_pass_filter #(
         .SAMPLE_RATE(SAMPLE_RATE),
-        .R(1200),
+        .R(2500), //TODO actual value is 1200, but 2500 has a closer response, probably need a better low pass implementation
         .C_35_SHIFTED(113387)
     ) filter4 (
         clk,
         audio_clk_en,
-        (v_control >> 2) + (v_control >> 4) + (v_control >> 5) + (v_control >> 6) + 16'd6900,
+        v_control,
         v_control_filtered
     );
 
+    //TODO: properly calculate influence of 555 timer on input voltage
     astable_555_vco #(
         .CLOCK_RATE(CLOCK_RATE),
         .SAMPLE_RATE(SAMPLE_RATE),
@@ -86,7 +86,7 @@ module dk_walk #(
     ) vco (
         .clk(clk),
         .audio_clk_en(audio_clk_en),
-        .v_control(v_control_filtered),
+        .v_control((v_control_filtered >> 2) + (v_control_filtered >> 4) + (v_control_filtered >> 5) + (v_control_filtered >> 6) + 16'd5500),
         .out(astable_555_out)
     );
 
