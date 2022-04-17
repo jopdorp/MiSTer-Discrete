@@ -41,15 +41,29 @@ module invertor_square_wave_oscilator#(
 ) (
     input clk,
     input audio_clk_en,
-    output reg signed[15:0] out = 0
+    output signed[15:0] out
 );
     localparam longint R1_K_OHM_16_SHIFTED = R1 * 16777 >>> 8; // 1/1000 <<< 24 = 16777
     localparam CONSTANT_RATIO_16_SHIFTED = 14895; // 1/2.2/2 * 2 ^ 16
     localparam longint FREQUENCY_16_SHIFTED = CONSTANT_RATIO_16_SHIFTED * (R1_K_OHM_16_SHIFTED * C_MICROFARADS_16_SHIFTED) >>> 32;
     localparam WAVE_LENGTH = (CLOCK_RATE <<< 16) / FREQUENCY_16_SHIFTED;
     localparam HALF_WAVE_LENGTH = WAVE_LENGTH >>> 1;
+    // localparam C_FARADS_35_SHIFTED = C_MICROFARADS_16_SHIFTED <<< 14 / 1000000;
 
     reg [63:0] wave_length_counter = 0;
+
+
+    reg signed[15:0] unfiltered_out = 0;
+
+    // filter to simulate transfer rate of invertors
+    rate_of_change_limiter #(
+        .SAMPLE_RATE(SAMPLE_RATE)
+    ) slew_rate (
+        clk,
+        audio_clk_en,
+        unfiltered_out,
+        out
+    );
 
     always @(posedge clk) begin
         if(wave_length_counter < WAVE_LENGTH)begin
@@ -59,7 +73,7 @@ module invertor_square_wave_oscilator#(
         end
 
         if (audio_clk_en) begin
-            out <=  wave_length_counter < HALF_WAVE_LENGTH ? 16384 : 0;
+            unfiltered_out <=  wave_length_counter < HALF_WAVE_LENGTH ? 16384 : 0;
         end
     end
 endmodule

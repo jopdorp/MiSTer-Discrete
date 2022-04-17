@@ -20,7 +20,21 @@ module dk_walk #(
     wire signed[15:0] mixer_input[1:0];
 
     wire signed[15:0] walk_en_5volts;
+    wire signed[15:0] walk_en_5volts_filtered;
     assign walk_en_5volts =  walk_en ? 0 : 'd6826; // 2^14 * 5/12 = 6826 , for 5 volts
+
+    // filter to simulate transfer rate of invertors
+    rate_of_change_limiter #(
+        .SAMPLE_RATE(SAMPLE_RATE)
+    ) slew_rate (
+        clk,
+        audio_clk_en,
+        walk_en_5volts,
+        walk_en_5volts_filtered
+    );
+
+    assign mixer_input[0] = walk_en_5volts_filtered; 
+    assign mixer_input[1] = square_osc_out;
 
     localparam SAMPLE_RATE_SHIFT = 3;
     localparam INTEGRATOR_SAMPLE_RATE = SAMPLE_RATE >>> SAMPLE_RATE_SHIFT;
@@ -49,26 +63,17 @@ module dk_walk #(
         .out(v_control)
     );
 
+    wire signed[15:0] v_control_filtered;
+
     resistor_capacitor_low_pass_filter #(
         .SAMPLE_RATE(SAMPLE_RATE),
-        .R(11200),
+        .R(1200),
         .C_35_SHIFTED(113387)
     ) filter4 (
         clk,
         audio_clk_en,
-        walk_en_5volts,
-        mixer_input[0]
-    );
-
-    resistor_capacitor_low_pass_filter #(
-        .SAMPLE_RATE(SAMPLE_RATE),
-        .R(13200),
-        .C_35_SHIFTED(113387)
-    ) filter5 (
-        clk,
-        audio_clk_en,
-        square_osc_out,
-        mixer_input[1]
+        v_control,
+        v_control_filtered
     );
 
     astable_555_vco #(
@@ -80,7 +85,7 @@ module dk_walk #(
     ) vco (
         .clk(clk),
         .audio_clk_en(audio_clk_en),
-        .v_control(v_control),
+        .v_control(v_control_filtered),
         .out(astable_555_out)
     );
 
@@ -96,7 +101,7 @@ module dk_walk #(
     );
 
     wire signed[15:0] walk_enveloped;
-    assign walk_enveloped = astable_555_out > 100 ? walk_en_filtered : 0;
+    assign walk_enveloped = astable_555_out > 1000 ? walk_en_filtered : 0;
     
     wire signed[15:0] walk_enveloped_high_passed;
 
