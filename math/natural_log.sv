@@ -6,7 +6,7 @@
  *  This program is free software under the terms of the GPLv3, see LICENCSE.txt
  *
  ********************************************************************************/
-module natural_log(input clk, input[23:0] in_8_shifted, input I_RSTn, output reg[11:0] out_8_shifted);
+module natural_log(input clk, input[23:0] in_8_shifted, input I_RSTn, output reg[11:0] out_8_shifted = 0);
     
     localparam RATIO_16_SHIFTED = 45426; // 1 / log2(e)
 
