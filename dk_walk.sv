@@ -11,9 +11,10 @@ module dk_walk #(
     parameter SAMPLE_RATE = 48000
 )(
     input clk,
+    input I_RSTn,
     input audio_clk_en,
     input walk_en,
-    output reg signed[15:0] out = 0
+    output reg signed[15:0] out
 );
     wire signed[15:0] square_osc_out;
     wire signed[15:0] v_control;
@@ -28,17 +29,18 @@ module dk_walk #(
         .SAMPLE_RATE(SAMPLE_RATE),
         .MAX_CHANGE_RATE(1000)
     ) slew_rate (
-        clk,
-        audio_clk_en,
-        walk_en_5volts,
-        walk_en_5volts_filtered
+        .clk(clk),
+        .I_RSTn(I_RSTn),
+        .audio_clk_en(audio_clk_en),
+        .in(walk_en_5volts),
+        .out(walk_en_5volts_filtered)
     );
 
     assign mixer_input[0] = walk_en_5volts_filtered; 
     assign mixer_input[1] = square_osc_out;
 
     localparam SAMPLE_RATE_SHIFT = 3;
-    localparam INTEGRATOR_SAMPLE_RATE = SAMPLE_RATE >>> SAMPLE_RATE_SHIFT;
+    localparam INTEGRATOR_SAMPLE_RATE = SAMPLE_RATE >> SAMPLE_RATE_SHIFT;
 
     wire signed[15:0] walk_en_filtered;
     wire signed[15:0] astable_555_out;
@@ -50,6 +52,7 @@ module dk_walk #(
         .C_MICROFARADS_16_SHIFTED(655360)
     ) square (
         .clk(clk),
+        .I_RSTn(I_RSTn),
         .audio_clk_en(audio_clk_en),
         .out(square_osc_out)
     );
@@ -59,6 +62,7 @@ module dk_walk #(
         .R1(12000)
     ) mixer (
         .clk(clk),
+        .I_RSTn(I_RSTn),
         .audio_clk_en(audio_clk_en),
         .inputs(mixer_input),
         .out(v_control)
@@ -71,10 +75,11 @@ module dk_walk #(
         .R(3000), //TODO actual value is 1200, but 3000 has a closer response, probably need a better low pass implementation
         .C_35_SHIFTED(113387)
     ) filter4 (
-        clk,
-        audio_clk_en,
-        v_control,
-        v_control_filtered
+        .clk(clk),
+        .I_RSTn(I_RSTn),
+        .audio_clk_en(audio_clk_en),
+        .in(v_control),
+        .out(v_control_filtered)
     );
 
     //TODO: properly calculate influence of 555 timer on input voltage
@@ -86,8 +91,9 @@ module dk_walk #(
         .C_35_SHIFTED(1134)
     ) vco (
         .clk(clk),
+        .I_RSTn(I_RSTn),
         .audio_clk_en(audio_clk_en),
-        .v_control((v_control_filtered >> 2) + (v_control_filtered >> 4) + (v_control_filtered >> 5) + (v_control_filtered >> 6) + 16'd5500),
+        .v_control((v_control_filtered >>> 2) + (v_control_filtered >>> 4) + (v_control_filtered >>> 5) + (v_control_filtered >>> 6) + 16'd5500),
         .out(astable_555_out)
     );
 
@@ -97,6 +103,7 @@ module dk_walk #(
         .C_35_SHIFTED(113387)
     ) filter1 (
         .clk(clk),
+        .I_RSTn(I_RSTn),
         .audio_clk_en(audio_clk_en),
         .in(walk_en_5volts_filtered),
         .out(walk_en_filtered)
@@ -112,10 +119,11 @@ module dk_walk #(
         .R(5600),
         .C_35_SHIFTED(161491)
     ) filter2 (
-        clk,
-        audio_clk_en,
-        walk_enveloped,
-        walk_enveloped_high_passed
+        .clk(clk),
+        .I_RSTn(I_RSTn),
+        .audio_clk_en(audio_clk_en),
+        .in(walk_enveloped),
+        .out(walk_enveloped_high_passed)
     );
 
     wire signed[15:0] walk_enveloped_band_passed;
@@ -125,20 +133,23 @@ module dk_walk #(
         .R(2500), // actually 5.6K
         .C_35_SHIFTED(1614)
     ) filter3 (
-        clk,
-        audio_clk_en,
-        walk_enveloped_high_passed,
-        walk_enveloped_band_passed
+        .clk(clk),
+        .I_RSTn(I_RSTn),
+        .audio_clk_en(audio_clk_en),
+        .in(walk_enveloped_high_passed),
+        .out(walk_enveloped_band_passed)
     );
 
 
 
-    always @(posedge clk) begin
-        if(audio_clk_en)begin
+    always @(posedge clk, negedge I_RSTn) begin
+        if(!I_RSTn)begin
+            out <= 0;
+        end else if(audio_clk_en)begin
             if(walk_enveloped_band_passed > 0) begin //TODO: hack to simulate diode connection coming from ground
                 out <= walk_enveloped_band_passed;
             end else begin
-                out <= walk_enveloped_band_passed / 2;
+                out <= walk_enveloped_band_passed >>> 1;
             end
         end
     end

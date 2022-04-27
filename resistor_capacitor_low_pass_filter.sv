@@ -15,22 +15,21 @@ module resistor_capacitor_low_pass_filter #(
     parameter C_35_SHIFTED = 1615 // 0.000000047 farads <<< 35 
 ) ( 
     input clk,
+    input I_RSTn,
     input audio_clk_en,
     input signed[15:0] in,
     output reg signed[15:0] out = 0
 );
-    localparam DELTA_T_32_SHIFTED = (1 <<< 32) / SAMPLE_RATE;
-    localparam R_C_32_SHIFTED = R * C_35_SHIFTED >>> 3;
-    localparam signed SMOOTHING_FACTOR_ALPHA_16_SHIFTED = (DELTA_T_32_SHIFTED <<< 16) / (R_C_32_SHIFTED + DELTA_T_32_SHIFTED);
+    localparam longint DELTA_T_32_SHIFTED = (1 <<< 32) / SAMPLE_RATE;
+    localparam longint R_C_32_SHIFTED = R * C_35_SHIFTED >>> 3;
+    localparam longint SMOOTHING_FACTOR_ALPHA_16_SHIFTED = (DELTA_T_32_SHIFTED <<< 16) / (R_C_32_SHIFTED + DELTA_T_32_SHIFTED);
 
-    always @(posedge clk) begin
-		if(audio_clk_en)begin
-            out <= get_updated_sample(out, in);
+    always@(posedge clk, negedge I_RSTn) begin
+        if(!I_RSTn)begin
+            out <= 0;
+        end else if(audio_clk_en)begin
+            out <= out + (SMOOTHING_FACTOR_ALPHA_16_SHIFTED * (in - out) >>> 16);
         end
     end
     
-    function reg signed[15:0] get_updated_sample(reg signed[15:0] previous_out, in);
-        return (previous_out) + (SMOOTHING_FACTOR_ALPHA_16_SHIFTED * (in - previous_out) >> 16);
-    endfunction
-
 endmodule

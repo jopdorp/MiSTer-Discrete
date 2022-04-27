@@ -14,31 +14,33 @@ module resistor_capacitor_high_pass_filter #(
     parameter C_35_SHIFTED = 1615 // 0.000000047 farads <<< 35 
 ) ( 
     input clk,
+    input I_RSTn,
     input audio_clk_en,
     input signed[15:0] in,
     output reg signed[15:0] out = 0
 );
-    localparam DELTA_T_32_SHIFTED = (1 <<< 32) / SAMPLE_RATE;
-    localparam R_C_32_SHIFTED = R * C_35_SHIFTED >>> 3;
-    localparam signed SMOOTHING_FACTOR_ALPHA_16_SHIFTED = (R_C_32_SHIFTED <<< 16) / (R_C_32_SHIFTED + DELTA_T_32_SHIFTED);
+    localparam longint DELTA_T_32_SHIFTED = (1 <<< 32) / SAMPLE_RATE;
+    localparam longint R_C_32_SHIFTED = R * C_35_SHIFTED >>> 3;
+    localparam longint SMOOTHING_FACTOR_ALPHA_16_SHIFTED = (R_C_32_SHIFTED <<< 16) / (R_C_32_SHIFTED + DELTA_T_32_SHIFTED);
     
     wire[7:0] random_number;
 
     LFSR lfsr(
-        clk,
-        random_number
+        .clk(clk),
+        .audio_clk_en(audio_clk_en),
+        .I_RSTn(I_RSTn),
+        .LFSR(random_number)
     );
 
     reg signed[15:0] last_in = 0;
-    always @(posedge clk) begin
-		if(audio_clk_en)begin
+    always@(posedge clk, negedge I_RSTn) begin
+        if(!I_RSTn)begin
+            out <= 0;
+            last_in <= 0;
+        end else if(audio_clk_en)begin
+            out <= SMOOTHING_FACTOR_ALPHA_16_SHIFTED * (out + in - last_in) >> 16;
             last_in <= in + ((random_number >>> 6) - 2); // add noise to help convergence to 0
-            out <= get_updated_sample(out, in, last_in);
         end
     end
     
-    function reg signed[15:0] get_updated_sample(reg signed[15:0] previous_out, in, previous_in);
-        return SMOOTHING_FACTOR_ALPHA_16_SHIFTED * (previous_out + in - previous_in) >> 16;
-    endfunction
-
 endmodule

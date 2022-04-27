@@ -48,6 +48,7 @@ module astable_555_vco#(
     parameter C_35_SHIFTED = 1134 // 33 nanofarad
 ) (
     input clk,
+    input I_RSTn,
     input audio_clk_en,
     input signed[15:0] v_control,
     output signed[15:0] out
@@ -60,10 +61,11 @@ module astable_555_vco#(
 
     wire signed[15:0] v_control_safe;
     wire [11:0] ln_vc_vcc_vc_8_shifted;
-    reg[23:0] to_log_8_shifted = 0;
+    reg[23:0] to_log_8_shifted;
     
     natural_log natlog(
         .in_8_shifted(to_log_8_shifted),
+        .I_RSTn(I_RSTn),
         .clk(clk),
         .out_8_shifted(ln_vc_vcc_vc_8_shifted)
     );
@@ -77,30 +79,36 @@ module astable_555_vco#(
 
     reg[63:0] wave_length_counter = 0;
 
-    reg[15:0] unfiltered_out;
+    reg signed[15:0] unfiltered_out;
 
     rate_of_change_limiter #(
         .SAMPLE_RATE(SAMPLE_RATE),
         .MAX_CHANGE_RATE(200000)
     ) slew_rate (
-        clk,
-        audio_clk_en,
-        unfiltered_out,
-        out
+        .clk(clk),
+        .I_RSTn(I_RSTn),
+        .audio_clk_en(audio_clk_en),
+        .in(unfiltered_out),
+        .out(out)
     );
 
-    always @(posedge clk) begin
-        to_log_8_shifted <= (1 << 8) + (v_control_safe << 8) / (2 * (VCC - v_control_safe));
-        CYCLES_HIGH <= (C_R1_R2_35_SHIFTED * ln_vc_vcc_vc_8_shifted * CLOCK_RATE) >>> 43; // C⋅(R1+R2)⋅ln(1+v_control/(2*(VCC−v_control)))
+    always @(posedge clk, negedge I_RSTn) begin
+        if(!I_RSTn)begin
+            unfiltered_out <= 0;
+            to_log_8_shifted <= 0;
+        end else begin
+            to_log_8_shifted <= (1 << 8) + (v_control_safe << 8) / (2 * (VCC - v_control_safe));
+            CYCLES_HIGH <= (C_R1_R2_35_SHIFTED * ln_vc_vcc_vc_8_shifted * CLOCK_RATE) >> 43; // C⋅(R1+R2)⋅ln(1+v_control/(2*(VCC−v_control)))
 
-        if(wave_length_counter < WAVE_LENGTH)begin
-           wave_length_counter <= wave_length_counter + 1;
-        end else begin 
-            wave_length_counter <= 0;
-        end
+            if(wave_length_counter < WAVE_LENGTH)begin
+            wave_length_counter <= wave_length_counter + 1;
+            end else begin 
+                wave_length_counter <= 0;
+            end
 
-        if(audio_clk_en)begin
-            unfiltered_out <= wave_length_counter < CYCLES_HIGH ? 16384 : 0;
+            if(audio_clk_en)begin
+                unfiltered_out <= wave_length_counter < CYCLES_HIGH ? 16384 : 0;
+            end
         end
     end
 endmodule

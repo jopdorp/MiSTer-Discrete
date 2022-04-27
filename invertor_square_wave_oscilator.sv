@@ -34,20 +34,21 @@
  *
  *********************************************************************************/
 module invertor_square_wave_oscilator#(
-    parameter CLOCK_RATE = 50000000,
+    parameter longint CLOCK_RATE = 50000000,
     parameter SAMPLE_RATE = 48000,
     parameter R1 = 4300,
     parameter C_MICROFARADS_16_SHIFTED = 655360 // 10 microfarad
 ) (
     input clk,
+    input I_RSTn,
     input audio_clk_en,
     output signed[15:0] out
 );
-    localparam longint R1_K_OHM_16_SHIFTED = R1 * 16777 >>> 8; // 1/1000 <<< 24 = 16777
-    localparam CONSTANT_RATIO_16_SHIFTED = 14895; // 1/2.2/2 * 2 ^ 16
-    localparam longint FREQUENCY_16_SHIFTED = CONSTANT_RATIO_16_SHIFTED * (R1_K_OHM_16_SHIFTED * C_MICROFARADS_16_SHIFTED) >>> 32;
-    localparam WAVE_LENGTH = (CLOCK_RATE <<< 16) / FREQUENCY_16_SHIFTED;
-    localparam HALF_WAVE_LENGTH = WAVE_LENGTH >>> 1;
+    localparam longint R1_K_OHM_16_SHIFTED = R1 * 16777 >> 8; // 1/1000 <<< 24 = 16777
+    localparam longint CONSTANT_RATIO_16_SHIFTED = 14895; // 1/2.2/2 * 2 ^ 16
+    localparam longint FREQUENCY_16_SHIFTED = CONSTANT_RATIO_16_SHIFTED * (R1_K_OHM_16_SHIFTED * C_MICROFARADS_16_SHIFTED) >> 32;
+    localparam longint WAVE_LENGTH = (CLOCK_RATE <<< 16) / FREQUENCY_16_SHIFTED;
+    localparam HALF_WAVE_LENGTH = WAVE_LENGTH >> 1;
 
     reg [63:0] wave_length_counter = 0;
 
@@ -57,21 +58,27 @@ module invertor_square_wave_oscilator#(
     rate_of_change_limiter #(
         .SAMPLE_RATE(SAMPLE_RATE)
     ) slew_rate (
-        clk,
-        audio_clk_en,
-        unfiltered_out,
-        out
+        .clk(clk),
+        .I_RSTn(I_RSTn),
+        .audio_clk_en(audio_clk_en),
+        .in(unfiltered_out),
+        .out(out)
     );
 
-    always @(posedge clk) begin
-        if(wave_length_counter < WAVE_LENGTH)begin
-           wave_length_counter <= wave_length_counter + 1;
-        end else begin 
+    always@(posedge clk, negedge I_RSTn) begin
+        if(!I_RSTn)begin
             wave_length_counter <= 0;
-        end
+            unfiltered_out <= 0;
+        end else begin
+            if(wave_length_counter < WAVE_LENGTH)begin
+                wave_length_counter <= wave_length_counter + 1;
+            end else begin 
+                wave_length_counter <= 0;
+            end
 
-        if (audio_clk_en) begin
-            unfiltered_out <=  wave_length_counter < HALF_WAVE_LENGTH ? 16384 : 0;
+            if (audio_clk_en) begin
+                unfiltered_out <=  wave_length_counter < HALF_WAVE_LENGTH ? 16384 : 0;
+            end
         end
     end
 endmodule
