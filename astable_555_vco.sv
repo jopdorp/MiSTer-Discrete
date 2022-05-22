@@ -55,13 +55,18 @@ module astable_555_vco#(
 );
     localparam VCC = 16384;
     localparam ln2_16_SHIFTED = 45426;
-    localparam[63:0] C_R2_ln2_27_SHIFTED = C_35_SHIFTED * R2 * ln2_16_SHIFTED >>> 24;
-    localparam C_R1_R2_35_SHIFTED = C_35_SHIFTED * (R1 + R2);
-    localparam CYCLES_LOW = C_R2_ln2_27_SHIFTED * CLOCK_RATE >>> 27;
+    localparam[63:0] C_R2_ln2_27_SHIFTED = C_35_SHIFTED * R2 * ln2_16_SHIFTED >> 24;
+    localparam[63:0] C_R1_R2_35_SHIFTED = C_35_SHIFTED * (R1 + R2);
+    localparam CYCLES_LOW = C_R2_ln2_27_SHIFTED * CLOCK_RATE >> 27;
+    localparam[31:0] CLOCK_RATE_C_R1_R2 = C_R1_R2_35_SHIFTED * CLOCK_RATE >> 35;
 
     wire signed[15:0] v_control_safe;
+
+    reg[15:0] v_control_divided_two_vcc_minus_vcontrol = 3000;
+    reg[15:0] two_vcc_minus_vcontrol = 3000;
+    
     wire [11:0] ln_vc_vcc_vc_8_shifted;
-    reg[23:0] to_log_8_shifted;
+    reg[23:0] to_log_8_shifted = 1000;
     
     natural_log natlog(
         .in_8_shifted(to_log_8_shifted),
@@ -71,7 +76,7 @@ module astable_555_vco#(
     );
 
     reg[63:0] WAVE_LENGTH;
-    reg[62:0] CYCLES_HIGH;
+    reg[62:0] CYCLES_HIGH = 1000;
 
     assign v_control_safe = v_control < 32767 ? v_control : 32766;
 
@@ -79,26 +84,30 @@ module astable_555_vco#(
 
     reg[63:0] wave_length_counter = 0;
 
-    reg signed[15:0] unfiltered_out;
+    reg signed[15:0] unfiltered_out = 0;
 
     rate_of_change_limiter #(
         .SAMPLE_RATE(SAMPLE_RATE),
         .MAX_CHANGE_RATE(200000)
     ) slew_rate (
-        .clk(clk),
-        .I_RSTn(I_RSTn),
-        .audio_clk_en(audio_clk_en),
-        .in(unfiltered_out),
-        .out(out)
+        clk,
+        I_RSTn,
+        audio_clk_en,
+        unfiltered_out,
+        out
     );
 
     always @(posedge clk, negedge I_RSTn) begin
         if(!I_RSTn)begin
             unfiltered_out <= 0;
             to_log_8_shifted <= 0;
+            wave_length_counter <= 0;
+            CYCLES_HIGH <= 1000;
         end else begin
-            to_log_8_shifted <= (1 << 8) + (v_control_safe << 8) / (2 * (VCC - v_control_safe));
-            CYCLES_HIGH <= (C_R1_R2_35_SHIFTED * ln_vc_vcc_vc_8_shifted * CLOCK_RATE) >> 43; // C⋅(R1+R2)⋅ln(1+v_control/(2*(VCC−v_control)))
+            v_control_divided_two_vcc_minus_vcontrol <= v_control_safe / (two_vcc_minus_vcontrol >> 8);
+            two_vcc_minus_vcontrol <= (VCC << 1) - (v_control_safe << 1);
+            to_log_8_shifted <= (1 << 8) + v_control_divided_two_vcc_minus_vcontrol;
+            CYCLES_HIGH <= ((CLOCK_RATE_C_R1_R2 >> 4) * ln_vc_vcc_vc_8_shifted) >> 4; // C⋅(R1+R2)⋅ln(1+v_control/(2*(VCC−v_control)))
 
             if(wave_length_counter < WAVE_LENGTH)begin
             wave_length_counter <= wave_length_counter + 1;

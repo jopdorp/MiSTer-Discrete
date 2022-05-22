@@ -14,7 +14,7 @@ module dk_walk_tb();
     reg I_RSTn = 1;
     wire signed[15:0] walk_out;
     wire[15:0] O_SOUND_DAT;
-    localparam CLOCK_RATE = 120000;
+    localparam CLOCK_RATE = 16 * 48000;
     localparam SAMPLE_RATE = 48000;
     localparam CYCLES_PER_SAMPLE = CLOCK_RATE / SAMPLE_RATE;
 
@@ -26,37 +26,8 @@ module dk_walk_tb();
         .out(walk_out)
     );
 
-    //  SOUND MIXER (WAV + DIG ) -----------------------
-    // TV audio filters
-    wire signed[15:0]sound_mix_low_passed;
-
-    resistor_capacitor_low_pass_filter #(
-        .SAMPLE_RATE(48000),
-        .R(11000), // actually 47000
-        .C_35_SHIFTED(3436)
-    ) filter3 (
-        .clk(clk),
-        .I_RSTn(I_RSTn),
-        .audio_clk_en(audio_clk_en),
-        .in(walk_out <<< 2),
-        .out(sound_mix_low_passed)
-    );
-
-    wire signed[15:0] sound_mix_band_passed;
-    resistor_capacitor_high_pass_filter #(
-        .SAMPLE_RATE(48000),
-        .R(10000), // actually 43000
-        .C_35_SHIFTED(34359)
-    ) filter2 (
-        .clk(clk),
-        .I_RSTn(I_RSTn),
-        .audio_clk_en(audio_clk_en),
-        .in(sound_mix_low_passed <<< 1),
-        .out(sound_mix_band_passed)
-    );
-
     // assign O_SOUND_DAT = sound_mix_low_passed;
-    assign O_SOUND_DAT = (sound_mix_band_passed) + 2**15;
+    assign O_SOUND_DAT = (walk_out) + 2**15;
 
     int file, i;
 
@@ -78,7 +49,9 @@ module dk_walk_tb();
     endtask
 
 
-    localparam steps = CYCLES_PER_SAMPLE * 4000;
+    localparam steps = CYCLES_PER_SAMPLE * 1500;
+    localparam HIGH_TIME = 1;
+    localparam LOW_TIME = 6;
     initial begin
         file = $fopen("dk_walk.csv","wb");
         #1 clk = 0;
@@ -90,75 +63,29 @@ module dk_walk_tb();
         #1 clk = 0;
         #1 clk = 1;
         #1 walk_en = 1;
-        #1 run_times(steps * 4);
+        #1 run_times(steps * HIGH_TIME);
         #1 walk_en = 0;
-        #1 run_times(steps);
+        #1 run_times(steps * LOW_TIME);
         #1 walk_en = 1;
-        #1 run_times(steps * 4);
+        #1 run_times(steps * HIGH_TIME);
         #1 walk_en = 0;
-        #1 run_times(steps);
+        #1 run_times(steps * LOW_TIME);
         #1 walk_en = 1;
-        #1 run_times(steps * 4);
+        #1 run_times(steps * HIGH_TIME);
         #1 walk_en = 0;
-        #1 run_times(steps);
+        #1 run_times(steps * LOW_TIME);
         #1 walk_en = 1;
-        #1 run_times(steps * 4);
+        #1 run_times(steps * HIGH_TIME);
         #1 walk_en = 0;
-        #1 run_times(steps);
+        #1 run_times(steps * LOW_TIME);
         #1 walk_en = 1;
-        #1 run_times(steps * 4);
+        #1 run_times(steps * HIGH_TIME);
         #1 walk_en = 0;
-        #1 run_times(steps);
+        #1 run_times(steps * LOW_TIME);
         #1 walk_en = 1;
-        #1 run_times(steps * 4);
+        #1 run_times(steps * HIGH_TIME);
         #1 walk_en = 0;
-        #1 run_times(steps);
-        #1 walk_en = 1;
-        #1 run_times(steps * 4);
-        #1 walk_en = 0;
-        #1 run_times(steps);
-        #1 walk_en = 1;
-        #1 run_times(steps * 4);
-        #1 walk_en = 0;
-        #1 run_times(steps);
-        #1 walk_en = 1;
-        #1 run_times(steps);
-        #1 walk_en = 0;
-        #1 run_times(steps);
-        #1 walk_en = 1;
-        #1 run_times(steps * 2);
-        #1 walk_en = 0;
-        #1 run_times(steps);
-        #1 walk_en = 1;
-        #1 run_times(steps * 2);
-        #1 walk_en = 0;
-        #1 run_times(steps);
-        #1 walk_en = 1;
-        #1 run_times(steps * 2);
-        #1 walk_en = 0;
-        #1 run_times(steps);
-        #1 walk_en = 1;
-        #1 run_times(steps * 2);
-        #1 walk_en = 0;
-        #1 run_times(steps);
-        #1 walk_en = 1;
-        #1 run_times(steps * 2);
-        #1 walk_en = 0;
-        #1 run_times(steps);
-        #1 walk_en = 1;
-        #1 run_times(steps * 2);
-        #1 walk_en = 0;
-        #1 run_times(steps);
-        #1 walk_en = 1;
-        #1 run_times(steps * 2);
-        #1 walk_en = 0;
-        #1 run_times(steps);
-        #1 walk_en = 1;
-        #1 run_times(steps * 2);
-        #1 walk_en = 0;
-        #1 run_times(steps);
-        #1 walk_en = 1;
-        #1 run_times(steps * 2);
+        #1 run_times(steps * LOW_TIME);
         $fclose(file);
     end
 
