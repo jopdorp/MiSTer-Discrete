@@ -57,7 +57,7 @@ module astable_555_vco#(
     localparam ln2_16_SHIFTED = 45426;
     localparam[63:0] C_R2_ln2_27_SHIFTED = C_35_SHIFTED * R2 * ln2_16_SHIFTED >> 24;
     localparam[63:0] C_R1_R2_35_SHIFTED = C_35_SHIFTED * (R1 + R2);
-    localparam CYCLES_LOW = C_R2_ln2_27_SHIFTED * CLOCK_RATE >> 27;
+    localparam[31:0] CYCLES_LOW = C_R2_ln2_27_SHIFTED * CLOCK_RATE >> 27;
     localparam[31:0] CLOCK_RATE_C_R1_R2 = C_R1_R2_35_SHIFTED * CLOCK_RATE >> 35;
 
     wire signed[15:0] v_control_safe;
@@ -75,10 +75,10 @@ module astable_555_vco#(
         .out_8_shifted(ln_vc_vcc_vc_8_shifted)
     );
 
-    reg[63:0] WAVE_LENGTH;
-    reg[62:0] CYCLES_HIGH = 1000;
+    reg[32:0] WAVE_LENGTH;
+    reg[31:0] CYCLES_HIGH = 1000;
 
-    assign v_control_safe = v_control < 32767 ? v_control : 32766;
+    assign v_control_safe = v_control < 32767 ? (v_control > 0 ? v_control : 1) : 32766;
 
     assign WAVE_LENGTH = CYCLES_HIGH + CYCLES_LOW;
 

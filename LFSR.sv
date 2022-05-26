@@ -7,7 +7,7 @@ module LFSR(
 
 wire feedback = LFSR[7];
 
-always @(posedge clk) begin
+always @(posedge clk, negedge I_RSTn) begin
   if(!I_RSTn)begin
     LFSR <= 255;
   end else if(audio_clk_en) begin

@@ -19,6 +19,7 @@ module resistor_capacitor_high_pass_filter_tb();
 
     astable_555_vco #(.CLOCK_RATE(CLOCK_RATE)) osc (
         .clk(clk),
+        .I_RSTn(1'b1),
         .audio_clk_en(audio_clk_en),
         .v_control(v_control),
         .out(out)
@@ -26,6 +27,7 @@ module resistor_capacitor_high_pass_filter_tb();
 
     resistor_capacitor_high_pass_filter filter (
         clk,
+        1'b1,
         audio_clk_en,
         out,
         filtered_out

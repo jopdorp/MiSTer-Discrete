@@ -19,15 +19,17 @@ module resistor_capacitor_low_pass_filter_tb();
 
     astable_555_vco #(.CLOCK_RATE(CLOCK_RATE)) osc (
         .clk(clk),
+        .I_RSTn(1'b1),
         .audio_clk_en(audio_clk_en),
         .v_control(v_control),
         .out(out)
     );
 
-    resistor_capacitor_low_pass_filter #(.CLOCK_RATE(CLOCK_RATE)) filter (
+    resistor_capacitor_low_pass_filter filter (
         clk,
+        1'b1,
         audio_clk_en,
-        out,
+        out - 16'd1000, //subtraction makes sure we also test negative values
         filtered_out
     );
 
@@ -57,8 +59,6 @@ module resistor_capacitor_low_pass_filter_tb();
     localparam steps = CYCLES_PER_SAMPLE * 3000;
     initial begin
         file = $fopen("resistor_capacitor_low_pass_filter.csv","wb");
-        // $fwrite(file,"%d\n", filter.TIME_STEP_35_SHIFTED);
-        // $fwrite(file,"%d\n", filter.C_12_RIGHT_SHIFTED);
         #1 v_control = 16384;
         #1 run_times(steps);
         #1 v_control = 15000;
@@ -73,9 +73,15 @@ module resistor_capacitor_low_pass_filter_tb();
         #1 run_times(steps);
         #1 v_control = 2500;
         #1 run_times(steps);
-        #1 v_control = 1250;
+        #1 v_control = 1500;
         #1 run_times(steps);
-        #1 v_control = 500;
+        #1 v_control = 1100;
+        #1 run_times(steps);
+        #1 v_control = 1000;
+        #1 run_times(steps);
+        #1 v_control = 950;
+        #1 run_times(steps);
+        #1 v_control = 900;
         #1 run_times(steps);
         #1 v_control = 0;
         #1 run_times(steps);

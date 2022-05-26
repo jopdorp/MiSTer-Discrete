@@ -3,3 +3,6 @@ venv/
 *.vvp
 *.csv
 *.log
+obj_dir
+.vscode
+*.vcd
