@@ -1,6 +1,6 @@
 /********************************************************************************\
  * 
- *  MiSTer Discrete example circuit - dk walk
+ *  MiSTer Discrete example circuit - beep sound
  *
  *  Copyright 2022 by Jegor van Opdorp. 
  *  This program is free software under the terms of the GPLv3, see LICENCSE.txt
