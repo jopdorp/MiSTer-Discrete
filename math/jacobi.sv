@@ -101,8 +101,6 @@ module jacobi#(
                         end
                     end
                     3 : begin
-                        // x[i] <= D_reciprocal[i];
-                        // x[i] <= ((b[i] - sum_s[SIZE] <<< POINT) / A[i][i]);
                         x[i] <= ((b[i] - sum_s[SIZE]) * D_reciprocal[i]) >>> POINT;
                     end
                 endcase
