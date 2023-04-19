@@ -10,8 +10,10 @@ module jacobi_tb();
     localparam SIZE = 3;
     reg clk = 1;
     reg not_reset = 1;
+    reg start = 0;
     localparam POINT = 12;
     localparam PRECISION = 24;
+    wire ready;
 
     wire signed[PRECISION+POINT-1:0] x[SIZE-1:0];
 
@@ -38,18 +40,20 @@ module jacobi_tb();
     jacobi #(
         .SIZE(SIZE),
         .PRECISION(PRECISION),
-        .POINT(POINT)
+        .POINT(POINT),
+        .ITERATIONS(8)
     ) gauss (
         .clk(clk),
         .I_RSTn(not_reset),
+        .start(start),
         .A(A),
         .b(b),
-        .x(x)
+        .x(x),
+        .ready(ready)
     );
 
-
-    task run_times(int  times);
-        for(int i = 0; i < times; i++) begin
+    task run_times;
+        while(~ready) begin
             #1 clk = 0;
             #1 clk = 1;
             #1;
@@ -67,8 +71,14 @@ module jacobi_tb();
         #1 clk = 0;
         #1 clk = 1;
         #1 not_reset = 1;
+        #1 clk = 0;
+        #1 clk = 1;
+        #1 start = 1;
+        #1 clk = 0;
+        #1 clk = 1;
+        #1 start = 0;
         #1;
-        run_times(PRECISION+POINT+POINT-1 + 28);
+        run_times();
         assert ((x[0] >>> POINT) == 19 && (x[1] >>> POINT) == 7 && (x[2] >>> POINT) == 3) begin
             #1 $display("correct!");
         end else begin
