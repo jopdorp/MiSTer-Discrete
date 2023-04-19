@@ -33,7 +33,7 @@ module jacobi_tb();
 
     assign b[0] = 52 <<< POINT;
     assign b[1] = 0 <<< POINT;
-    assign b[2] = 3 <<< POINT;
+    assign b[2] = 0 <<< POINT;
 
     jacobi #(
         .SIZE(SIZE),
