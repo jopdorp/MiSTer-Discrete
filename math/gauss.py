@@ -1,17 +1,18 @@
+import numpy as np
+
 def gauss(A):
     m = len(A)
     n = m + 1
-    
     for k in range(m):
         pivots = [abs(A[i][k]) for i in range(k, m)]
         i_max = pivots.index(max(pivots)) + k
         
         # Swap rows
         A[k], A[i_max] = A[i_max], A[k]
+        A_recip = np.reciprocal(np.diag(A))
 
-        
         for i in range(k + 1, m):
-            f = A[i][k] / A[k][k]
+            f = A[i][k] * A_recip[k]
             for j in range(k + 1, n):
                 A[i][j] -= A[k][j] * f
 
@@ -28,9 +29,9 @@ def gauss(A):
 
 
 matrix = [
-    [3, -1, 0, 52],
-    [-1,3,-1, 0],
-    [0,-1,2, 0],
+    [3., -1., 0., 52.],
+    [-1.,3.,-1., 0.],
+    [0.,-1.,2., 0.],
 ]
 
 print(gauss(matrix))
