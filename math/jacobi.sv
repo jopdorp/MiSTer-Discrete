@@ -38,9 +38,10 @@ module jacobi#(
             step <= step + 1;
         end
 
-        if(step == 3)begin
+        if(step == 2)begin
+            step <= 0;
             iteration <= iteration + 1;
-            if(iteration == ITERATIONS)begin
+            if(iteration == ITERATIONS-1)begin
                 ready <= '1;
             end
         end
@@ -55,15 +56,11 @@ module jacobi#(
             for (j = 0; j < SIZE; j++) begin
                 always_ff @(posedge clk) begin
                     case (step)
-                        0 : begin 
-                            s[j] <= 0;
-                        end
-                        1 : begin if (j != i) begin
+                        0 : begin if (j != i) begin
                             s[j] <= (A[i][j] * x[j]) >>> POINT;
+                        end else begin
+                            s[j] <= 0;
                         end end
-                        2 : begin
-                            // let sum_s resolve.
-                        end
                     endcase
                 end
                 assign sum_s[0] = 0;
@@ -82,14 +79,15 @@ module jacobi#(
             always_ff @(posedge clk) begin
                 if(~I_RSTn)begin
                     x[i] <= 0;
+                    D_reciprocal[i] <= 0;
                 end
                 case (step)
-                    0 : begin
+                    1 : begin
                         if(D_reciprocal_complete[i])begin
                             D_reciprocal[i] <= D_reciprocal_temp[i];
                         end
                     end
-                    3 : begin
+                    2 : begin
                         if(iteration <= ITERATIONS)begin
                             x[i] <= ((b[i] - sum_s[SIZE]) * D_reciprocal[i]) >>> POINT;
                         end

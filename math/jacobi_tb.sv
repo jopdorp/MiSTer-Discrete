@@ -11,8 +11,8 @@ module jacobi_tb();
     reg clk = 1;
     reg not_reset = 1;
     reg start = 0;
-    localparam POINT = 12;
-    localparam PRECISION = 24;
+    localparam POINT = 7;
+    localparam PRECISION = 16;
     wire ready;
 
     wire signed[PRECISION+POINT-1:0] x[SIZE-1:0];
@@ -55,18 +55,23 @@ module jacobi_tb();
     task run_times;
         while(~ready) begin
             #1 clk = 0;
+            #1;
             #1 clk = 1;
             #1;
         end
+        $display("%d", counter);
         for(int i = 0; i < SIZE; i ++)begin
             #1 $display("%d", x[i] >>> POINT);
         end
-
     endtask
 
+    int counter = 0;
+
+    always_ff @(posedge clk)begin
+        counter++;
+    end
+
     initial begin
-        #1 clk = 0;
-        #1 clk = 1;
         #1 not_reset = 0;
         #1 clk = 0;
         #1 clk = 1;
@@ -74,6 +79,7 @@ module jacobi_tb();
         #1 clk = 0;
         #1 clk = 1;
         #1 start = 1;
+        #1 counter = 0;
         #1 clk = 0;
         #1 clk = 1;
         #1 start = 0;
