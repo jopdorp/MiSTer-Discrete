@@ -86,7 +86,7 @@ module jacobi#(
                 assign sum_s[j+1] = sum_s[j] + s[j];
             end
 
-            // qdiv #(.Q(POINT),.N(PRECISION+POINT))	uut ({{(PRECISION+POINT-1){1'b0}},{1'b1}} <<< POINT, A[i][i], start[i], clk, D_reciprocal_temp[i], D_reciprocal_complete[i]);
+            qdiv #(.Q(POINT),.N(PRECISION+POINT))	uut ({{(PRECISION+POINT-1){1'b0}},{1'b1}} <<< POINT, A[i][i], start[i], clk, D_reciprocal_temp[i], D_reciprocal_complete[i]);
 
             always_ff @(posedge clk) begin
                 if(~I_RSTn)begin
