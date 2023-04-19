@@ -7,3 +7,4 @@ obj_dir
 .vscode
 *.vcd
 a.out
+.idea/
