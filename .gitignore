@@ -6,3 +6,4 @@ venv/
 obj_dir
 .vscode
 *.vcd
+a.out
