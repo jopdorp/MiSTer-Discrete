@@ -14,7 +14,7 @@ module dk_walk #(
     input I_RSTn,
     input audio_clk_en,
     input walk_en,
-    output reg signed[15:0] out
+    output reg signed[15:0] out = 0
 );
     wire signed[15:0] square_osc_out;
     wire signed[15:0] v_control;
@@ -72,7 +72,7 @@ module dk_walk #(
 
     resistor_capacitor_low_pass_filter #(
         .SAMPLE_RATE(SAMPLE_RATE),
-        .R(3700), //TODO actual value is 1200, but 3700 has a closer response, probably need a better low pass implementation
+        .R(3700), //TODO actual value is 1200, but 3700 a closer response, probably need a better low pass implementation
         .C_35_SHIFTED(113387)
     ) filter4 (
         .clk(clk),
@@ -99,7 +99,7 @@ module dk_walk #(
 
     resistor_capacitor_high_pass_filter #(
         .SAMPLE_RATE(SAMPLE_RATE),
-        .R(9500), // not sure what this should be
+        .R(9200), // not sure what this should be
         .C_35_SHIFTED(113387)
     ) filter1 (
         .clk(clk),
@@ -147,9 +147,9 @@ module dk_walk #(
             out <= 0;
         end else if(audio_clk_en)begin
             if(walk_enveloped_band_passed > 0) begin //TODO: hack to simulate diode connection coming from ground
-                out <= walk_enveloped_band_passed;
+                out <= walk_enveloped_band_passed + (walk_enveloped_band_passed >>> 1);
             end else begin
-                out <= walk_enveloped_band_passed >>> 1;
+                out <= walk_enveloped_band_passed >>> 1 + (walk_enveloped_band_passed >>> 2);
             end
         end
     end
