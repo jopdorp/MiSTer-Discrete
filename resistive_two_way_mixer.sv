@@ -28,7 +28,7 @@ module resistive_two_way_mixer #(
     input I_RSTn,
     input audio_clk_en,
     input[15:0] inputs[1:0],
-    output reg[15:0] out
+    output reg[15:0] out = 0
 );
     localparam integer R0_RATIO_16_SHIFTED = ((R1 <<< 16) / R0);
     localparam integer R1_RATIO_16_SHIFTED = ((R0 <<< 16) / R1);
