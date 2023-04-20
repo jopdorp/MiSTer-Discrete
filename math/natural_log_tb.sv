@@ -6,7 +6,7 @@
  *  This program is free software under the terms of the GPLv3, see LICENCSE.txt
  *
  ********************************************************************************/
-module invertor_square_wave_oscilator_tb();
+module natural_log_tb();
 
     reg clk = 1;
     reg[23:0] in;
@@ -14,6 +14,7 @@ module invertor_square_wave_oscilator_tb();
     natural_log log (
         .clk(clk),
         .in_8_shifted(in),
+        .I_RSTn(1'b1),
         .out_8_shifted(out)
     );
 

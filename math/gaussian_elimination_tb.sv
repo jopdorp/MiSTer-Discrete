@@ -6,7 +6,7 @@
  *  This program is free software under the terms of the GPLv3, see LICENCSE.txt
  *
  ********************************************************************************/
-module invertor_square_wave_oscilator_tb();
+module gaussian_elimination_tb();
     localparam SIZE = 3;
 
     reg[15:0] in[SIZE-1:0][SIZE:0];
