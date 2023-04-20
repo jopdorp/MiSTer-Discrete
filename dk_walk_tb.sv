@@ -14,9 +14,10 @@ module dk_walk_tb();
     reg I_RSTn = 1;
     wire signed[15:0] walk_out;
     wire[15:0] O_SOUND_DAT;
-    localparam CLOCK_RATE = 16 * 48000;
-    localparam SAMPLE_RATE = 48000;
-    localparam CYCLES_PER_SAMPLE = CLOCK_RATE / SAMPLE_RATE;
+    localparam CLOCK_RATE = 32 * 48000;
+    localparam SAMPLE_RATE = 96000;
+    localparam OVERSAMPLE = 2;
+    localparam CYCLES_PER_SAMPLE = CLOCK_RATE / SAMPLE_RATE * OVERSAMPLE;
 
     dk_walk #(.CLOCK_RATE(CLOCK_RATE),.SAMPLE_RATE(SAMPLE_RATE)) walk (
         .clk(clk),

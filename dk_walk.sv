@@ -72,7 +72,7 @@ module dk_walk #(
 
     resistor_capacitor_low_pass_filter #(
         .SAMPLE_RATE(SAMPLE_RATE),
-        .R(3700), //TODO actual value is 1200, but 3700 a closer response, probably need a better low pass implementation
+        .R(1200),
         .C_35_SHIFTED(113387)
     ) filter4 (
         .clk(clk),
@@ -130,7 +130,7 @@ module dk_walk #(
 
     resistor_capacitor_low_pass_filter #(
         .SAMPLE_RATE(SAMPLE_RATE),
-        .R(3000), // actually 5.6K
+        .R(5600),
         .C_35_SHIFTED(1614)
     ) filter3 (
         .clk(clk),
