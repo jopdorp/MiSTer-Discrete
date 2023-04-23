@@ -1,7 +1,7 @@
 module rate_of_change_limiter #(
     parameter VCC = 12,
     parameter SAMPLE_RATE = 48000,
-    parameter MAX_CHANGE_RATE = 1000 //10 V/s
+    parameter MAX_CHANGE_RATE = 950 // V/s
 ) (
     input clk,
     input I_RSTn,

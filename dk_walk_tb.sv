@@ -14,10 +14,13 @@ module dk_walk_tb();
     reg I_RSTn = 1;
     wire signed[15:0] walk_out;
     wire[15:0] O_SOUND_DAT;
-    localparam CLOCK_RATE = 32 * 48000;
-    localparam SAMPLE_RATE = 96000;
-    localparam OVERSAMPLE = 2;
+    localparam OVERSAMPLE = 3;
+    localparam CLOCK_RATE = 12 * 48000 * OVERSAMPLE;
+    localparam SAMPLE_RATE = 48000 * OVERSAMPLE;
     localparam CYCLES_PER_SAMPLE = CLOCK_RATE / SAMPLE_RATE * OVERSAMPLE;
+    localparam steps = CYCLES_PER_SAMPLE * 1400;
+    localparam HIGH_TIME = 1;
+    localparam LOW_TIME = 6;
 
     dk_walk #(.CLOCK_RATE(CLOCK_RATE),.SAMPLE_RATE(SAMPLE_RATE)) walk (
         .clk(clk),
@@ -27,7 +30,6 @@ module dk_walk_tb();
         .out(walk_out)
     );
 
-    // assign O_SOUND_DAT = sound_mix_low_passed;
     assign O_SOUND_DAT = (walk_out) + 2**15;
 
     int file, i;
@@ -49,10 +51,15 @@ module dk_walk_tb();
         end
     endtask
 
+    task walk_times(int times);
+        for(int i = 0; i < times; i++) begin
+            #1 walk_en = 1;
+            #1 run_times(steps * HIGH_TIME);
+            #1 walk_en = 0;
+            #1 run_times(steps * LOW_TIME);
+        end
+    endtask
 
-    localparam steps = CYCLES_PER_SAMPLE * 1500;
-    localparam HIGH_TIME = 1;
-    localparam LOW_TIME = 6;
     initial begin
         file = $fopen("dk_walk.csv","wb");
         #1 clk = 0;
@@ -63,30 +70,7 @@ module dk_walk_tb();
         #1 I_RSTn = 1;
         #1 clk = 0;
         #1 clk = 1;
-        #1 walk_en = 1;
-        #1 run_times(steps * HIGH_TIME);
-        #1 walk_en = 0;
-        #1 run_times(steps * LOW_TIME);
-        #1 walk_en = 1;
-        #1 run_times(steps * HIGH_TIME);
-        #1 walk_en = 0;
-        #1 run_times(steps * LOW_TIME);
-        #1 walk_en = 1;
-        #1 run_times(steps * HIGH_TIME);
-        #1 walk_en = 0;
-        #1 run_times(steps * LOW_TIME);
-        #1 walk_en = 1;
-        #1 run_times(steps * HIGH_TIME);
-        #1 walk_en = 0;
-        #1 run_times(steps * LOW_TIME);
-        #1 walk_en = 1;
-        #1 run_times(steps * HIGH_TIME);
-        #1 walk_en = 0;
-        #1 run_times(steps * LOW_TIME);
-        #1 walk_en = 1;
-        #1 run_times(steps * HIGH_TIME);
-        #1 walk_en = 0;
-        #1 run_times(steps * LOW_TIME);
+        walk_times(8);
         $fclose(file);
     end
 

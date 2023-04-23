@@ -17,6 +17,7 @@ module dk_walk #(
     output reg signed[15:0] out = 0
 );
     wire signed[15:0] square_osc_out;
+    wire signed[15:0] square_osc_out_change_limited;
     wire signed[15:0] v_control;
     wire signed[15:0] mixer_input[1:0];
 
@@ -48,7 +49,7 @@ module dk_walk #(
     invertor_square_wave_oscilator#(
         .CLOCK_RATE(CLOCK_RATE),
         .SAMPLE_RATE(SAMPLE_RATE),
-        .R1(4100),// sligtly slower R, to simulate slower freq due to transfer rate of inverters
+        .R1(4300),
         .C_MICROFARADS_16_SHIFTED(655360)
     ) square (
         .clk(clk),
@@ -82,7 +83,6 @@ module dk_walk #(
         .out(v_control_filtered)
     );
 
-    //TODO: properly calculate influence of 555 timer on input voltage
     astable_555_vco #(
         .CLOCK_RATE(CLOCK_RATE),
         .SAMPLE_RATE(SAMPLE_RATE),
@@ -93,7 +93,8 @@ module dk_walk #(
         .clk(clk),
         .I_RSTn(I_RSTn),
         .audio_clk_en(audio_clk_en),
-        .v_control((v_control_filtered >>> 1) + 16'd5900),
+        //TODO: properly calculate influence of 1k pullup resistor
+        .v_control(v_control_filtered + 16'd5900),
         .out(astable_555_out)
     );
 
@@ -140,8 +141,6 @@ module dk_walk #(
         .out(walk_enveloped_band_passed)
     );
 
-
-
     always @(posedge clk, negedge I_RSTn) begin
         if(!I_RSTn)begin
             out <= 0;
@@ -149,7 +148,7 @@ module dk_walk #(
             if(walk_enveloped_band_passed > 0) begin //TODO: hack to simulate diode connection coming from ground
                 out <= walk_enveloped_band_passed + (walk_enveloped_band_passed >>> 1);
             end else begin
-                out <= walk_enveloped_band_passed >>> 1 + (walk_enveloped_band_passed >>> 2);
+                out <= walk_enveloped_band_passed - (walk_enveloped_band_passed >>> 8);
             end
         end
     end
