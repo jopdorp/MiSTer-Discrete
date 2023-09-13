@@ -93,14 +93,16 @@ module dk_walk #(
         .clk(clk),
         .I_RSTn(I_RSTn),
         .audio_clk_en(audio_clk_en),
-        //TODO: properly calculate influence of 1k pullup resistor
+        //TODO: properly calculate influence of 1k pullup resistor, this is calibrated by ear now. 
+        //      It influences the range, so the lowest and the highest notes in the walk sound
         .v_control(v_control_filtered + 16'd5900),
         .out(astable_555_out)
     );
 
     resistor_capacitor_high_pass_filter #(
         .SAMPLE_RATE(SAMPLE_RATE),
-        .R(9200), // not sure what this should be
+        // not sure what this should be, setting this low introduces some kind of ring oscilation, making for a "dirtyer" sound
+        .R(7000), 
         .C_35_SHIFTED(113387)
     ) filter1 (
         .clk(clk),
