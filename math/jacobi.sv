@@ -2,7 +2,7 @@
  * 
  *  MiSTer Discrete jacobi iterative method core
  *
- *  Copyright 2022 by Jegor van Opdorp. 
+ *  Copyright 2023 by Jegor van Opdorp. 
  *  This program is free software under the terms of the GPLv3, see LICENCSE.txt
  *
  ********************************************************************************/
@@ -39,9 +39,9 @@ module jacobi#(
         end
 
         if(step == 2)begin
-            step <= 0;
             iteration <= iteration + 1;
             if(iteration == ITERATIONS-1)begin
+                step <= 0;
                 ready <= '1;
             end
         end

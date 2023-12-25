@@ -39,7 +39,7 @@ module resistor_capacitor_high_pass_filter #(
             out <= 0;
             last_in <= 0;
         end else if(audio_clk_en)begin
-            out <= SMOOTHING_FACTOR_ALPHA_16_SHIFTED * (out + in - last_in) >> 16;
+            out <= SMOOTHING_FACTOR_ALPHA_16_SHIFTED * (out + in - last_in) >>> 16;
             last_in <= in + ((random_number >>> 6) - 2); // add noise to help convergence to 0
         end
     end

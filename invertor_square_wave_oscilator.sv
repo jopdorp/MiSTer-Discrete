@@ -46,14 +46,14 @@ module invertor_square_wave_oscilator#(
     input audio_clk_en,
     output signed[15:0] out
 );
-    localparam longint R1_K_OHM_16_SHIFTED = R1 * 16777 >> 8; // 1/1000 <<< 24 = 16777
+    localparam longint R1_K_OHM_16_SHIFTED = R1 * 16777 >>> 8; // 1/1000 <<< 24 = 16777
     localparam longint CONSTANT_RATIO_16_SHIFTED = 14895; // 1/2.2/2 * 2 ^ 16
-    localparam longint FREQUENCY_16_SHIFTED = CONSTANT_RATIO_16_SHIFTED * (R1_K_OHM_16_SHIFTED * C_MICROFARADS_16_SHIFTED) >> 32;
+    localparam longint FREQUENCY_16_SHIFTED = CONSTANT_RATIO_16_SHIFTED * (R1_K_OHM_16_SHIFTED * C_MICROFARADS_16_SHIFTED) >>> 32;
     localparam longint RATE_OF_CHANGE = 1000;
     localparam longint INVERTOR_SWITCHING_SLOWNESS = (CLOCK_RATE <<< 16) / ((RATE_OF_CHANGE <<< 16) / (V_SIGNAL * 2));
     localparam longint WAVE_LENGTH = (CLOCK_RATE <<< 16) / FREQUENCY_16_SHIFTED + INVERTOR_SWITCHING_SLOWNESS;
     localparam longint output_volume = (V_SIGNAL <<< 14) / VCC; 
-    localparam HALF_WAVE_LENGTH = WAVE_LENGTH >> 1;
+    localparam HALF_WAVE_LENGTH = WAVE_LENGTH >>> 1;
 
     reg [63:0] wave_length_counter = 0;
 

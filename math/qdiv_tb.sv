@@ -1,6 +1,6 @@
 /********************************************************************************\
  * 
- *  MiSTer Discrete jacobi iterative method test bench
+ *  MiSTer Discrete qdiv testbench
  *
  *  Copyright 2022 by Jegor van Opdorp. 
  *  This program is free software under the terms of the GPLv3, see LICENCSE.txt

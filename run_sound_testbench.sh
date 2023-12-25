@@ -22,4 +22,6 @@ then
 fi 
  
 iverilog -y ./math -y ./ -Y .sv -Y .v ${MODULE}.sv -g2012 -o ${MODULE}_tb.sv.vvp ${MODULE}_tb.sv
-vvp ${MODULE}_tb.sv.vvp && python convert_to_wav.py ${MODULE}.csv
+vvp ${MODULE}_tb.sv.vvp
+mv $(basename "${MODULE}").csv ${MODULE}.csv
+python convert_to_wav.py ${MODULE}.csv

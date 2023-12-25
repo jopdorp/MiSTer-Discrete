@@ -1,4 +1,11 @@
-
+/********************************************************************************\
+ * 
+ *  MiSTer Discrete qdiv core
+ *
+ *  Copyright 2023 by Jegor van Opdorp. 
+ *  This program is free software under the terms of the GPLv3, see LICENCSE.txt
+ *
+ ********************************************************************************/
 module qdiv#(
     parameter Q = 15,
 	parameter N = 32
@@ -54,7 +61,7 @@ module qdiv#(
 			end
  
 			//reduce divisor
-			divider_copy <= divider_copy >> 1;
+			divider_copy <= divider_copy >>> 1;
  
 			//stop condition
 			if(part == 0)

@@ -1487,7 +1487,7 @@ static DRWAV_INLINE drwav_uint16 drwav__bswap16(drwav_uint16 n)
         #error "This compiler does not support the byte swap intrinsic."
     #endif
 #else
-    return ((n & 0xFF00) >> 8) |
+    return ((n & 0xFF00) >>> 8) |
            ((n & 0x00FF) << 8);
 #endif
 }
@@ -1516,8 +1516,8 @@ static DRWAV_INLINE drwav_uint32 drwav__bswap32(drwav_uint32 n)
         #error "This compiler does not support the byte swap intrinsic."
     #endif
 #else
-    return ((n & 0xFF000000) >> 24) |
-           ((n & 0x00FF0000) >>  8) |
+    return ((n & 0xFF000000) >>> 24) |
+           ((n & 0x00FF0000) >>>  8) |
            ((n & 0x0000FF00) <<  8) |
            ((n & 0x000000FF) << 24);
 #endif
@@ -1535,10 +1535,10 @@ static DRWAV_INLINE drwav_uint64 drwav__bswap64(drwav_uint64 n)
     #endif
 #else
     /* Weird "<< 32" bitshift is required for C89 because it doesn't support 64-bit constants. Should be optimized out by a good compiler. */
-    return ((n & ((drwav_uint64)0xFF000000 << 32)) >> 56) |
-           ((n & ((drwav_uint64)0x00FF0000 << 32)) >> 40) |
-           ((n & ((drwav_uint64)0x0000FF00 << 32)) >> 24) |
-           ((n & ((drwav_uint64)0x000000FF << 32)) >>  8) |
+    return ((n & ((drwav_uint64)0xFF000000 << 32)) >>> 56) |
+           ((n & ((drwav_uint64)0x00FF0000 << 32)) >>> 40) |
+           ((n & ((drwav_uint64)0x0000FF00 << 32)) >>> 24) |
+           ((n & ((drwav_uint64)0x000000FF << 32)) >>>  8) |
            ((n & ((drwav_uint64)0xFF000000      )) <<  8) |
            ((n & ((drwav_uint64)0x00FF0000      )) << 24) |
            ((n & ((drwav_uint64)0x0000FF00      )) << 40) |
@@ -2958,7 +2958,7 @@ DRWAV_PRIVATE drwav_uint32 drwav_get_bytes_per_pcm_frame(drwav* pWav)
     */
     if ((pWav->bitsPerSample & 0x7) == 0) {
         /* Bits per sample is a multiple of 8. */
-        bytesPerFrame = (pWav->bitsPerSample * pWav->fmt.channels) >> 3;
+        bytesPerFrame = (pWav->bitsPerSample * pWav->fmt.channels) >>> 3;
     } else {
         bytesPerFrame = pWav->fmt.blockAlign;
     }
@@ -3751,7 +3751,7 @@ DRWAV_PRIVATE size_t drwav__write_or_count_metadata(drwav* pWav, drwav_metadata*
                 bytesWritten += drwav__write_or_count(pWav, pMetadata->data.bext.pOriginationTime, sizeof(pMetadata->data.bext.pOriginationTime));
 
                 timeReferenceLow  = (drwav_uint32)(pMetadata->data.bext.timeReference & 0xFFFFFFFF);
-                timeReferenceHigh = (drwav_uint32)(pMetadata->data.bext.timeReference >> 32);
+                timeReferenceHigh = (drwav_uint32)(pMetadata->data.bext.timeReference >>> 32);
                 bytesWritten += drwav__write_or_count_u32ne_to_le(pWav, timeReferenceLow);
                 bytesWritten += drwav__write_or_count_u32ne_to_le(pWav, timeReferenceHigh);
 
@@ -5806,19 +5806,19 @@ DRWAV_PRIVATE drwav_uint64 drwav_read_pcm_frames_s16__msadpcm(drwav* pWav, drwav
                 pWav->msadpcm.bytesRemainingInBlock -= 1;
 
                 /* TODO: Optimize away these if statements. */
-                nibble0 = ((nibbles & 0xF0) >> 4); if ((nibbles & 0x80)) { nibble0 |= 0xFFFFFFF0UL; }
-                nibble1 = ((nibbles & 0x0F) >> 0); if ((nibbles & 0x08)) { nibble1 |= 0xFFFFFFF0UL; }
+                nibble0 = ((nibbles & 0xF0) >>> 4); if ((nibbles & 0x80)) { nibble0 |= 0xFFFFFFF0UL; }
+                nibble1 = ((nibbles & 0x0F) >>> 0); if ((nibbles & 0x08)) { nibble1 |= 0xFFFFFFF0UL; }
 
                 if (pWav->channels == 1) {
                     /* Mono. */
                     drwav_int32 newSample0;
                     drwav_int32 newSample1;
 
-                    newSample0  = ((pWav->msadpcm.prevFrames[0][1] * coeff1Table[pWav->msadpcm.predictor[0]]) + (pWav->msadpcm.prevFrames[0][0] * coeff2Table[pWav->msadpcm.predictor[0]])) >> 8;
+                    newSample0  = ((pWav->msadpcm.prevFrames[0][1] * coeff1Table[pWav->msadpcm.predictor[0]]) + (pWav->msadpcm.prevFrames[0][0] * coeff2Table[pWav->msadpcm.predictor[0]])) >>> 8;
                     newSample0 += nibble0 * pWav->msadpcm.delta[0];
                     newSample0  = drwav_clamp(newSample0, -32768, 32767);
 
-                    pWav->msadpcm.delta[0] = (adaptationTable[((nibbles & 0xF0) >> 4)] * pWav->msadpcm.delta[0]) >> 8;
+                    pWav->msadpcm.delta[0] = (adaptationTable[((nibbles & 0xF0) >>> 4)] * pWav->msadpcm.delta[0]) >>> 8;
                     if (pWav->msadpcm.delta[0] < 16) {
                         pWav->msadpcm.delta[0] = 16;
                     }
@@ -5827,11 +5827,11 @@ DRWAV_PRIVATE drwav_uint64 drwav_read_pcm_frames_s16__msadpcm(drwav* pWav, drwav
                     pWav->msadpcm.prevFrames[0][1] = newSample0;
 
 
-                    newSample1  = ((pWav->msadpcm.prevFrames[0][1] * coeff1Table[pWav->msadpcm.predictor[0]]) + (pWav->msadpcm.prevFrames[0][0] * coeff2Table[pWav->msadpcm.predictor[0]])) >> 8;
+                    newSample1  = ((pWav->msadpcm.prevFrames[0][1] * coeff1Table[pWav->msadpcm.predictor[0]]) + (pWav->msadpcm.prevFrames[0][0] * coeff2Table[pWav->msadpcm.predictor[0]])) >>> 8;
                     newSample1 += nibble1 * pWav->msadpcm.delta[0];
                     newSample1  = drwav_clamp(newSample1, -32768, 32767);
 
-                    pWav->msadpcm.delta[0] = (adaptationTable[((nibbles & 0x0F) >> 0)] * pWav->msadpcm.delta[0]) >> 8;
+                    pWav->msadpcm.delta[0] = (adaptationTable[((nibbles & 0x0F) >>> 0)] * pWav->msadpcm.delta[0]) >>> 8;
                     if (pWav->msadpcm.delta[0] < 16) {
                         pWav->msadpcm.delta[0] = 16;
                     }
@@ -5849,11 +5849,11 @@ DRWAV_PRIVATE drwav_uint64 drwav_read_pcm_frames_s16__msadpcm(drwav* pWav, drwav
                     drwav_int32 newSample1;
 
                     /* Left. */
-                    newSample0  = ((pWav->msadpcm.prevFrames[0][1] * coeff1Table[pWav->msadpcm.predictor[0]]) + (pWav->msadpcm.prevFrames[0][0] * coeff2Table[pWav->msadpcm.predictor[0]])) >> 8;
+                    newSample0  = ((pWav->msadpcm.prevFrames[0][1] * coeff1Table[pWav->msadpcm.predictor[0]]) + (pWav->msadpcm.prevFrames[0][0] * coeff2Table[pWav->msadpcm.predictor[0]])) >>> 8;
                     newSample0 += nibble0 * pWav->msadpcm.delta[0];
                     newSample0  = drwav_clamp(newSample0, -32768, 32767);
 
-                    pWav->msadpcm.delta[0] = (adaptationTable[((nibbles & 0xF0) >> 4)] * pWav->msadpcm.delta[0]) >> 8;
+                    pWav->msadpcm.delta[0] = (adaptationTable[((nibbles & 0xF0) >>> 4)] * pWav->msadpcm.delta[0]) >>> 8;
                     if (pWav->msadpcm.delta[0] < 16) {
                         pWav->msadpcm.delta[0] = 16;
                     }
@@ -5863,11 +5863,11 @@ DRWAV_PRIVATE drwav_uint64 drwav_read_pcm_frames_s16__msadpcm(drwav* pWav, drwav
 
 
                     /* Right. */
-                    newSample1  = ((pWav->msadpcm.prevFrames[1][1] * coeff1Table[pWav->msadpcm.predictor[1]]) + (pWav->msadpcm.prevFrames[1][0] * coeff2Table[pWav->msadpcm.predictor[1]])) >> 8;
+                    newSample1  = ((pWav->msadpcm.prevFrames[1][1] * coeff1Table[pWav->msadpcm.predictor[1]]) + (pWav->msadpcm.prevFrames[1][0] * coeff2Table[pWav->msadpcm.predictor[1]])) >>> 8;
                     newSample1 += nibble1 * pWav->msadpcm.delta[1];
                     newSample1  = drwav_clamp(newSample1, -32768, 32767);
 
-                    pWav->msadpcm.delta[1] = (adaptationTable[((nibbles & 0x0F) >> 0)] * pWav->msadpcm.delta[1]) >> 8;
+                    pWav->msadpcm.delta[1] = (adaptationTable[((nibbles & 0x0F) >>> 0)] * pWav->msadpcm.delta[1]) >>> 8;
                     if (pWav->msadpcm.delta[1] < 16) {
                         pWav->msadpcm.delta[1] = 16;
                     }
@@ -6005,15 +6005,15 @@ DRWAV_PRIVATE drwav_uint64 drwav_read_pcm_frames_s16__ima(drwav* pWav, drwav_uin
                     pWav->ima.bytesRemainingInBlock -= 4;
 
                     for (iByte = 0; iByte < 4; ++iByte) {
-                        drwav_uint8 nibble0 = ((nibbles[iByte] & 0x0F) >> 0);
-                        drwav_uint8 nibble1 = ((nibbles[iByte] & 0xF0) >> 4);
+                        drwav_uint8 nibble0 = ((nibbles[iByte] & 0x0F) >>> 0);
+                        drwav_uint8 nibble1 = ((nibbles[iByte] & 0xF0) >>> 4);
 
                         drwav_int32 step      = stepTable[pWav->ima.stepIndex[iChannel]];
                         drwav_int32 predictor = pWav->ima.predictor[iChannel];
 
-                        drwav_int32      diff  = step >> 3;
-                        if (nibble0 & 1) diff += step >> 2;
-                        if (nibble0 & 2) diff += step >> 1;
+                        drwav_int32      diff  = step >>> 3;
+                        if (nibble0 & 1) diff += step >>> 2;
+                        if (nibble0 & 2) diff += step >>> 1;
                         if (nibble0 & 4) diff += step;
                         if (nibble0 & 8) diff  = -diff;
 
@@ -6026,9 +6026,9 @@ DRWAV_PRIVATE drwav_uint64 drwav_read_pcm_frames_s16__ima(drwav* pWav, drwav_uin
                         step      = stepTable[pWav->ima.stepIndex[iChannel]];
                         predictor = pWav->ima.predictor[iChannel];
 
-                                         diff  = step >> 3;
-                        if (nibble1 & 1) diff += step >> 2;
-                        if (nibble1 & 2) diff += step >> 1;
+                                         diff  = step >>> 3;
+                        if (nibble1 & 1) diff += step >>> 2;
+                        if (nibble1 & 2) diff += step >>> 1;
                         if (nibble1 & 4) diff += step;
                         if (nibble1 & 8) diff  = -diff;
 
@@ -6145,7 +6145,7 @@ DRWAV_PRIVATE void drwav__pcm_to_s16(drwav_int16* pOut, const drwav_uint8* pIn, 
         }
 
         pIn += j;
-        *pOut++ = (drwav_int16)((drwav_int64)sample >> 48);
+        *pOut++ = (drwav_int16)((drwav_int64)sample >>> 48);
     }
 }
 
@@ -6445,8 +6445,8 @@ DRWAV_API void drwav_s24_to_s16(drwav_int16* pOut, const drwav_uint8* pIn, size_
     int r;
     size_t i;
     for (i = 0; i < sampleCount; ++i) {
-        int x = ((int)(((unsigned int)(((const drwav_uint8*)pIn)[i*3+0]) << 8) | ((unsigned int)(((const drwav_uint8*)pIn)[i*3+1]) << 16) | ((unsigned int)(((const drwav_uint8*)pIn)[i*3+2])) << 24)) >> 8;
-        r = x >> 8;
+        int x = ((int)(((unsigned int)(((const drwav_uint8*)pIn)[i*3+0]) << 8) | ((unsigned int)(((const drwav_uint8*)pIn)[i*3+1]) << 16) | ((unsigned int)(((const drwav_uint8*)pIn)[i*3+2])) << 24)) >>> 8;
+        r = x >>> 8;
         pOut[i] = (short)r;
     }
 }
@@ -6457,7 +6457,7 @@ DRWAV_API void drwav_s32_to_s16(drwav_int16* pOut, const drwav_int32* pIn, size_
     size_t i;
     for (i = 0; i < sampleCount; ++i) {
         int x = pIn[i];
-        r = x >> 16;
+        r = x >>> 16;
         pOut[i] = (short)r;
     }
 }
@@ -6912,7 +6912,7 @@ DRWAV_API void drwav_s24_to_f32(float* pOut, const drwav_uint8* pIn, size_t samp
         drwav_uint32 b = ((drwav_uint32)(pIn[i*3+1]) << 16);
         drwav_uint32 c = ((drwav_uint32)(pIn[i*3+2]) << 24);
 
-        x = (double)((drwav_int32)(a | b | c) >> 8);
+        x = (double)((drwav_int32)(a | b | c) >>> 8);
         *pOut++ = (float)(x * 0.00000011920928955078125);
     }
 }
@@ -7017,7 +7017,7 @@ DRWAV_PRIVATE void drwav__pcm_to_s32(drwav_int32* pOut, const drwav_uint8* pIn, 
         }
 
         pIn += j;
-        *pOut++ = (drwav_int32)((drwav_int64)sample >> 32);
+        *pOut++ = (drwav_int32)((drwav_int64)sample >>> 32);
     }
 }
 

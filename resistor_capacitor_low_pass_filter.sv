@@ -21,9 +21,9 @@ module resistor_capacitor_low_pass_filter #(
     input signed[15:0] in,
     output reg signed[15:0] out = 0
 );
-    localparam longint DELTA_T_32_SHIFTED = (1 << 32) / SAMPLE_RATE;
-    localparam longint R_C_32_SHIFTED = R * C_35_SHIFTED >> 3;
-    localparam longint LONG_SMOOTHING_FACTOR = (DELTA_T_32_SHIFTED << 16) / (R_C_32_SHIFTED + DELTA_T_32_SHIFTED);
+    localparam longint DELTA_T_32_SHIFTED = (1 <<< 32) / SAMPLE_RATE;
+    localparam longint R_C_32_SHIFTED = R * C_35_SHIFTED >>> 3;
+    localparam longint LONG_SMOOTHING_FACTOR = (DELTA_T_32_SHIFTED <<< 16) / (R_C_32_SHIFTED + DELTA_T_32_SHIFTED);
 
     localparam signed [29:0] SMOOTHING_FACTOR_ALPHA_16_SHIFTED = {1'b0, LONG_SMOOTHING_FACTOR[28:0]};
 

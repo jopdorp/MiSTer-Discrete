@@ -1,23 +1,6 @@
 from numpy import array, zeros, diag, diagflat, dot, reciprocal
 from numpy.linalg import inv
 
-# def jacobi(A,b,N=25,x=None):
-#     """Solves the equation Ax=b via the Jacobi iterative method."""
-#     # Create an initial guess if needed                                                                                                                                                            
-#     if x is None:
-#         x = zeros(len(A[0]))
-
-#     # Create a vector of the diagonal elements of A                                                                                                                                                
-#     # and subtract them from A                                                                                                                                                                     
-#     D = diag(A)
-#     print(D)
-#     R = A - diagflat(D)
-
-#     # Iterate for N times                                                                                                                                                                          
-#     for _ in range(N):
-#         x = (b - dot(R,x)) / D
-#     return x
-
 def jacobi_matrix(A,b,N=25,x=None):
     """Solves the equation Ax=b via the Jacobi iterative method."""
     # Create an initial guess if needed                                                                                                                                                            
@@ -58,5 +41,19 @@ matrix = array([
 
 b = array([52.,0.,0.])
 
-print(jacobi_matrix(matrix,b,1))
-print(jacobi_element_wise(matrix,b,4))
+print(jacobi_matrix(matrix,b,10))
+print(jacobi_element_wise(matrix,b,3))
+
+R1 = 6.
+R2 = 24.
+R3 = 12.
+V0 = 6.
+
+matrix = array([
+    [1./R1,-1./R1, 1.001],
+    [-1./R1,1./R3 + 1./R2 + 1./R1,0.001],
+    [1.001,0.001, 0.001],
+])
+
+b = array([0.,0.,V0])
+print(jacobi_matrix(matrix,b,10))

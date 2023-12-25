@@ -47,7 +47,7 @@ begin
 end
  
  
-wire [20:0] tmp1 =	(barrelin << ~priencout1);	// Barrel shifter - OMG, it's a primitive in Verilog!
+wire [20:0] tmp1 =	(barrelin <<< ~priencout1);	// Barrel shifter - OMG, it's a primitive in Verilog!
 always @(posedge clk)
 begin
 	barrelout	<=	tmp1[20:15];

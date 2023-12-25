@@ -88,12 +88,12 @@ module dk_walk #(
         .SAMPLE_RATE(SAMPLE_RATE),
         .R1(47000),
         .R2(27000),
-        .C_35_SHIFTED(1134)
+        .C_35_SHIFTED(1134) // C28
     ) vco (
         .clk(clk),
         .I_RSTn(I_RSTn),
         .audio_clk_en(audio_clk_en),
-        //TODO: properly calculate influence of 1k pullup resistor, this is calibrated by ear now. 
+        //TODO: properly calculate the resistor mesh R44, R45, R46, this is calibrated by ear now. 
         //      It influences the range, so the lowest and the highest notes in the walk sound
         .v_control(v_control_filtered + 16'd5900),
         .out(astable_555_out)
@@ -102,8 +102,8 @@ module dk_walk #(
     resistor_capacitor_high_pass_filter #(
         .SAMPLE_RATE(SAMPLE_RATE),
         // not sure what this should be, setting this low introduces some kind of ring oscilation, making for a "dirtyer" sound
-        .R(7000), 
-        .C_35_SHIFTED(113387)
+        .R(7000), // mesh R44, R45, R46
+        .C_35_SHIFTED(113387) // C29
     ) filter1 (
         .clk(clk),
         .I_RSTn(I_RSTn),
@@ -125,7 +125,7 @@ module dk_walk #(
         .clk(clk),
         .I_RSTn(I_RSTn),
         .audio_clk_en(audio_clk_en),
-        .in(walk_enveloped),
+        .in(walk_enveloped <<< 1),
         .out(walk_enveloped_high_passed)
     );
 
@@ -139,7 +139,7 @@ module dk_walk #(
         .clk(clk),
         .I_RSTn(I_RSTn),
         .audio_clk_en(audio_clk_en),
-        .in(walk_enveloped_high_passed),
+        .in(walk_enveloped_high_passed <<< 1),
         .out(walk_enveloped_band_passed)
     );
 
@@ -147,10 +147,11 @@ module dk_walk #(
         if(!I_RSTn)begin
             out <= 0;
         end else if(audio_clk_en)begin
-            if(walk_enveloped_band_passed > 0) begin //TODO: hack to simulate diode connection coming from ground
-                out <= walk_enveloped_band_passed + (walk_enveloped_band_passed >>> 1);
+            //FIXME: hack to simulate diode connection coming from ground
+            if(walk_enveloped_band_passed > 0) begin 
+                out <= walk_enveloped_band_passed;
             end else begin
-                out <= walk_enveloped_band_passed - (walk_enveloped_band_passed >>> 8);
+                out <= (walk_enveloped_band_passed >>> 1) - (walk_enveloped_band_passed >>> 4);
             end
         end
     end

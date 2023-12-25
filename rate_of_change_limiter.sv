@@ -9,7 +9,7 @@ module rate_of_change_limiter #(
     input signed[15:0] in,
     output reg signed[15:0] out = 0
 );
-    localparam longint MAX_CHANGE_PER_SAMPLE = (MAX_CHANGE_RATE << 14) / VCC / SAMPLE_RATE;
+    localparam longint MAX_CHANGE_PER_SAMPLE = (MAX_CHANGE_RATE <<< 14) / VCC / SAMPLE_RATE;
 
     wire signed[16:0] difference;
     assign difference = in - out;

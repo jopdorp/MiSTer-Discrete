@@ -23,7 +23,7 @@ module natural_log(input clk, input[23:0] in_8_shifted, input I_RSTn, output reg
         if(!I_RSTn)begin
             out_8_shifted <= 0;
         end else if(log2_x)begin
-            out_8_shifted <= RATIO_16_SHIFTED * log2_x >> 16; 
+            out_8_shifted <= RATIO_16_SHIFTED * log2_x >>> 16; 
         end
     end
 
