@@ -17,7 +17,6 @@ module dk_walk #(
     output reg signed[15:0] out = 0
 );
     wire signed[15:0] square_osc_out;
-    wire signed[15:0] square_osc_out_change_limited;
     wire signed[15:0] v_control;
     wire signed[15:0] mixer_input[1:0];
 
@@ -102,7 +101,9 @@ module dk_walk #(
     resistor_capacitor_high_pass_filter #(
         .SAMPLE_RATE(SAMPLE_RATE),
         // not sure what this should be, setting this low introduces some kind of ring oscilation, making for a "dirtyer" sound
-        .R(7000), // mesh R44, R45, R46
+        // Might actually need to be appluied to the  square wave osc and the walk_en before they are mixed together
+        // related to mesh R44, R45, R46
+        .R(12000),
         .C_35_SHIFTED(113387) // C29
     ) filter1 (
         .clk(clk),
@@ -113,7 +114,8 @@ module dk_walk #(
     );
 
     wire signed[15:0] walk_enveloped;
-    assign walk_enveloped = astable_555_out > 1000 ? walk_en_filtered : 0;
+    // FIXME hack to simulate diondes coming from 555 output
+    assign walk_enveloped = astable_555_out > 2000 ? walk_en_filtered : 0;
     
     wire signed[15:0] walk_enveloped_high_passed;
 
