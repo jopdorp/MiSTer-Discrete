@@ -1,5 +1,8 @@
 venv/
 *.wav
+!mdfourier-dac-48000.wav
+!mdfourier-dac-48000-left.wav
+!mdfourier-dac-48000-right.wav
 *.vvp
 *.csv
 *.log
