@@ -11,7 +11,7 @@
  ********************************************************************************/
 module resistor_capacitor_low_pass_filter #(
     /* verilator lint_off WIDTH */
-    parameter[63:0] SAMPLE_RATE = 48000,
+    parameter[63:0] SAMPLE_RATE = 48000 * 2,
     parameter R = 47000,
     parameter C_35_SHIFTED = 1615 // 0.000000047 farads <<< 35 
 ) ( 

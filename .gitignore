@@ -8,3 +8,4 @@ obj_dir
 *.vcd
 a.out
 .idea/
+MDFResults/
