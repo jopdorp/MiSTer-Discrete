@@ -94,16 +94,17 @@ module dk_walk #(
         .audio_clk_en(audio_clk_en),
         //TODO: properly calculate the resistor mesh R44, R45, R46, this is calibrated by ear now. 
         //      It influences the range, so the lowest and the highest notes in the walk sound
-        .v_control(v_control_filtered + 16'd5900),
+        .v_control(v_control_filtered + 16'd6200),
         .out(astable_555_out)
     );
 
     resistor_capacitor_high_pass_filter #(
         .SAMPLE_RATE(SAMPLE_RATE),
-        // not sure what this should be, setting this low introduces some kind of ring oscilation, making for a "dirtyer" sound
+        // setting this lower allows more of the aftertone, setting it higher makes a shorter and bulkier sound
         // Might actually need to be appluied to the  square wave osc and the walk_en before they are mixed together
         // related to mesh R44, R45, R46
-        .R(12000),
+        // Chose (R46=12K) + (R44=1.2K) = 13.2K 
+        .R(13200),
         .C_35_SHIFTED(113387) // C29
     ) filter1 (
         .clk(clk),
@@ -141,7 +142,7 @@ module dk_walk #(
         .clk(clk),
         .I_RSTn(I_RSTn),
         .audio_clk_en(audio_clk_en),
-        .in(walk_enveloped_high_passed <<< 1),
+        .in(walk_enveloped_high_passed),
         .out(walk_enveloped_band_passed)
     );
 
@@ -153,7 +154,7 @@ module dk_walk #(
             if(walk_enveloped_band_passed > 0) begin 
                 out <= walk_enveloped_band_passed;
             end else begin
-                out <= (walk_enveloped_band_passed >>> 1) - (walk_enveloped_band_passed >>> 4);
+                out <= (walk_enveloped_band_passed >>> 1) - (walk_enveloped_band_passed >>> 6);
             end
         end
     end
