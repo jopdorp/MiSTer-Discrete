@@ -27,7 +27,7 @@ module dk_walk #(
     // filter to simulate transfer rate of invertors
     rate_of_change_limiter #(
         .SAMPLE_RATE(SAMPLE_RATE),
-        .MAX_CHANGE_RATE(950)
+        .MAX_CHANGE_RATE(1300)
     ) slew_rate (
         .clk(clk),
         .I_RSTn(I_RSTn),
@@ -38,9 +38,6 @@ module dk_walk #(
 
     assign mixer_input[0] = walk_en_5volts_filtered; 
     assign mixer_input[1] = square_osc_out;
-
-    localparam SAMPLE_RATE_SHIFT = 3;
-    localparam INTEGRATOR_SAMPLE_RATE = SAMPLE_RATE >> SAMPLE_RATE_SHIFT;
 
     wire signed[15:0] walk_en_filtered;
     wire signed[15:0] astable_555_out;
@@ -68,8 +65,8 @@ module dk_walk #(
         .out(v_control)
     );
 
+    // This is an oversimplification of the filter on the input signals, but it works for now
     wire signed[15:0] v_control_filtered;
-
     resistor_capacitor_low_pass_filter #(
         .SAMPLE_RATE(SAMPLE_RATE),
         .R(1200),
@@ -93,69 +90,68 @@ module dk_walk #(
         .I_RSTn(I_RSTn),
         .audio_clk_en(audio_clk_en),
         //TODO: properly calculate the resistor mesh R44, R45, R46, this is calibrated by ear now. 
-        //      It influences the range, so the lowest and the highest notes in the walk sound
-        .v_control(v_control_filtered + 16'd6200),
+        // It influences the range, so the lowest and the highest notes in the walk sound
+        .v_control(v_control_filtered + 16'd6300),
         .out(astable_555_out)
     );
 
+    wire signed[15:0] walk_en_high_passed;
+
     resistor_capacitor_high_pass_filter #(
         .SAMPLE_RATE(SAMPLE_RATE),
-        // setting this lower allows more of the aftertone, setting it higher makes a shorter and bulkier sound
-        // Might actually need to be appluied to the  square wave osc and the walk_en before they are mixed together
-        // related to mesh R44, R45, R46
-        // Chose (R46=12K) + (R44=1.2K) = 13.2K 
-        .R(13200),
-        .C_35_SHIFTED(113387) // C29
-    ) filter1 (
+        .R(10000), // R 17
+        .C_35_SHIFTED(113387) // C25 3.3uF
+    ) filter7 (
         .clk(clk),
         .I_RSTn(I_RSTn),
         .audio_clk_en(audio_clk_en),
         .in(walk_en_5volts_filtered),
-        .out(walk_en_filtered)
+        .out(walk_en_high_passed)
     );
 
-    wire signed[15:0] walk_enveloped;
-    // FIXME hack to simulate diondes coming from 555 output
-    assign walk_enveloped = astable_555_out > 2000 ? walk_en_filtered : 0;
-    
-    wire signed[15:0] walk_enveloped_high_passed;
+    // simulate D5 which is a 1SS53 rectifier diode
+    wire signed[15:0] walk_en_rectified;
+    assign walk_en_rectified = walk_en_high_passed > 0 ? walk_en_high_passed : 0;
 
+
+    // Simulate Q6 which is a C1815 NPN transistor, which opens at 0.6 volts
+    // 2^14 * 0.6/12 = 820 , for 0.6 volts
+    wire signed[15:0] walk_en_oscilated;
+    assign walk_en_oscilated = astable_555_out > 820 ? walk_en_high_passed : 0;
+
+    wire signed[15:0] walk_en_oscilated_high_passed;
+    
     resistor_capacitor_high_pass_filter #(
         .SAMPLE_RATE(SAMPLE_RATE),
-        .R(2000),
-        .C_35_SHIFTED(161491)
-    ) filter2 (
+        .R(5600), // R15
+        .C_35_SHIFTED(161491) // C23 4.7uF
+    ) filter8 (
         .clk(clk),
         .I_RSTn(I_RSTn),
         .audio_clk_en(audio_clk_en),
-        .in(walk_enveloped <<< 1),
-        .out(walk_enveloped_high_passed)
+        .in(walk_en_oscilated <<< 1), // shift to add some volume
+        .out(walk_en_oscilated_high_passed)
     );
 
-    wire signed[15:0] walk_enveloped_band_passed;
+    wire signed[15:0] walk_en_oscilated_band_passed;
 
     resistor_capacitor_low_pass_filter #(
         .SAMPLE_RATE(SAMPLE_RATE),
-        .R(5600),
-        .C_35_SHIFTED(1614)
+        .R(5600), // R16
+        .C_35_SHIFTED(1614) // C22 0.047uF
     ) filter3 (
         .clk(clk),
         .I_RSTn(I_RSTn),
         .audio_clk_en(audio_clk_en),
-        .in(walk_enveloped_high_passed),
-        .out(walk_enveloped_band_passed)
+        .in(walk_en_oscilated_high_passed <<< 1), // shift to add some volume
+        .out(walk_en_oscilated_band_passed)
     );
 
     always @(posedge clk, negedge I_RSTn) begin
         if(!I_RSTn)begin
             out <= 0;
         end else if(audio_clk_en)begin
-            //FIXME: hack to simulate diode connection coming from ground
-            if(walk_enveloped_band_passed > 0) begin 
-                out <= walk_enveloped_band_passed;
-            end else begin
-                out <= (walk_enveloped_band_passed >>> 1) - (walk_enveloped_band_passed >>> 6);
-            end
+            out <= walk_en_oscilated_band_passed;
         end
     end
 
