@@ -48,12 +48,7 @@ module dk_walk #(
         .out(square_osc_out)
     );
 
-    WalkEnAstable555 #(
-        .walk_en(walk_en_5volts_filtered),
-        .square_wave(square_osc_out),
-        .vcc(12),
-        .v_control(v_control)
-    ) walk_en_astable (
+    WalkEnAstable555 walk_en_astable (
         .walk_en(walk_en_filtered),
         .square_wave(square_osc_out),
         .vcc(12),
