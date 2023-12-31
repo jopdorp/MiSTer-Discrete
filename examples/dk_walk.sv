@@ -36,6 +36,12 @@ module dk_walk #(
         .out(walk_en_5volts_filtered)
     );
 
+    assign mixer_input[0] = walk_en_5volts_filtered; 
+    assign mixer_input[1] = square_osc_out;
+
+    wire signed[15:0] walk_en_filtered;
+    wire signed[15:0] astable_555_out;
+
     invertor_square_wave_oscilator#(
         .CLOCK_RATE(CLOCK_RATE),
         .SAMPLE_RATE(SAMPLE_RATE),
@@ -48,14 +54,30 @@ module dk_walk #(
         .out(square_osc_out)
     );
 
-    WalkEnAstable555 walk_en_astable (
-        .walk_en(walk_en_filtered),
-        .square_wave(square_osc_out),
-        .vcc(12),
-        .v_control(v_control)
+    resistive_two_way_mixer #(
+        .R0(10000),
+        .R1(12000)
+    ) mixer (
+        .clk(clk),
+        .I_RSTn(I_RSTn),
+        .audio_clk_en(audio_clk_en),
+        .inputs(mixer_input),
+        .out(v_control)
     );
 
-    wire signed[15:0] astable_555_out;
+    // This is an oversimplification of the filter on the input signals, but it works for now
+    wire signed[15:0] v_control_filtered;
+    resistor_capacitor_low_pass_filter #(
+        .SAMPLE_RATE(SAMPLE_RATE),
+        .R(1200),
+        .C_35_SHIFTED(113387)
+    ) filter4 (
+        .clk(clk),
+        .I_RSTn(I_RSTn),
+        .audio_clk_en(audio_clk_en),
+        .in(v_control),
+        .out(v_control_filtered)
+    );
 
     astable_555_vco #(
         .CLOCK_RATE(CLOCK_RATE),
