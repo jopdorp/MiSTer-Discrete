@@ -6,6 +6,12 @@
  *  This program is free software under the terms of the GPLv3, see LICENCSE.txt
  *
  ********************************************************************************/
+ `include "../svreal.sv"
+ `include "../msdsl.sv"
+
+`define RST_MSDSL I_RSTn
+`define CLK_MSDSL clk
+
 module dk_walk #(
     parameter CLOCK_RATE = 1000000,
     parameter SAMPLE_RATE = 48000
@@ -16,6 +22,7 @@ module dk_walk #(
     input walk_en,
     output reg signed[15:0] out = 0
 );
+    import math_pkg::*;
     wire signed[15:0] square_osc_out;
     wire signed[15:0] v_control;
     wire signed[15:0] mixer_input[1:0];
@@ -36,12 +43,6 @@ module dk_walk #(
         .out(walk_en_5volts_filtered)
     );
 
-    assign mixer_input[0] = walk_en_5volts_filtered; 
-    assign mixer_input[1] = square_osc_out;
-
-    wire signed[15:0] walk_en_filtered;
-    wire signed[15:0] astable_555_out;
-
     invertor_square_wave_oscilator#(
         .CLOCK_RATE(CLOCK_RATE),
         .SAMPLE_RATE(SAMPLE_RATE),
@@ -54,30 +55,16 @@ module dk_walk #(
         .out(square_osc_out)
     );
 
-    resistive_two_way_mixer #(
-        .R0(10000),
-        .R1(12000)
-    ) mixer (
+    WalkEnAstable555 walk_en_astable (
         .clk(clk),
         .I_RSTn(I_RSTn),
-        .audio_clk_en(audio_clk_en),
-        .inputs(mixer_input),
-        .out(v_control)
+        .walk_en(walk_en_5volts_filtered),
+        .square_wave(square_osc_out),
+        .vcc(12),
+        .v_control(v_control)
     );
 
-    // This is an oversimplification of the filter on the input signals, but it works for now
-    wire signed[15:0] v_control_filtered;
-    resistor_capacitor_low_pass_filter #(
-        .SAMPLE_RATE(SAMPLE_RATE),
-        .R(1200),
-        .C_35_SHIFTED(113387)
-    ) filter4 (
-        .clk(clk),
-        .I_RSTn(I_RSTn),
-        .audio_clk_en(audio_clk_en),
-        .in(v_control),
-        .out(v_control_filtered)
-    );
+    wire signed[15:0] astable_555_out;
 
     astable_555_vco #(
         .CLOCK_RATE(CLOCK_RATE),
@@ -89,9 +76,7 @@ module dk_walk #(
         .clk(clk),
         .I_RSTn(I_RSTn),
         .audio_clk_en(audio_clk_en),
-        //TODO: properly calculate the resistor mesh R44, R45, R46, this is calibrated by ear now. 
-        // It influences the range, so the lowest and the highest notes in the walk sound
-        .v_control(v_control_filtered + 16'd6300),
+        .v_control(v_control),
         .out(astable_555_out)
     );
 

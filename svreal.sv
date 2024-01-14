@@ -42,17 +42,152 @@
 // real number inputs, which is needed to automatically
 // compute exponents.  the the value returned is
 // int(ceil(log2(x)))
-function int clog2_math(input real x);
-    clog2_math = 0;
-    if (x > 0) begin
-        while (x < (2.0**(clog2_math))) begin
-            clog2_math = clog2_math - 1;
+/* verilator lint_off LITENDIAN */
+package math_pkg;
+    function int clog2_math(input real x);
+        clog2_math = 0;
+        if (x > 0) begin
+            while (x < (2.0**(clog2_math))) begin
+                clog2_math = clog2_math - 1;
+            end
+            while (x > (2.0**(clog2_math))) begin
+                clog2_math = clog2_math + 1;
+            end
         end
-        while (x > (2.0**(clog2_math))) begin
-            clog2_math = clog2_math + 1;
+    endfunction
+
+    // convert the HardFloat recoded format to a real number
+    function real recfn2real(input logic [((`HARD_FLOAT_EXP_WIDTH)+(`HARD_FLOAT_SIG_WIDTH)):0] in);
+        // recoded format
+        logic rec_sign;
+        logic [(`HARD_FLOAT_EXP_WIDTH):0] rec_exp;
+        logic [((`HARD_FLOAT_SIG_WIDTH)-2):0] rec_sig;
+        logic [2:0] rec_exp_top;
+
+        // double-precision format
+        logic dbl_sign;
+        logic [10:0] dbl_exp;
+        logic [51:0] dbl_sig;
+        logic [63:0] dbl_bits;
+
+        // deconstruct input
+        rec_sign = in[`HARD_FLOAT_SIGN_BIT];
+        rec_exp = in[((`HARD_FLOAT_SIGN_BIT)-1):((`HARD_FLOAT_SIGN_BIT)-1-((`HARD_FLOAT_EXP_WIDTH)+1)+1)];
+        rec_sig = in[((`HARD_FLOAT_SIG_WIDTH)-2):0];
+        rec_exp_top = rec_exp[(`HARD_FLOAT_EXP_WIDTH):((`HARD_FLOAT_EXP_WIDTH)-3+1)];
+
+        // walk through various cases
+        if (rec_exp_top == 3'b000) begin
+            // zero
+            dbl_sign = rec_sign;
+            dbl_exp = 0;
+            dbl_sig = 0;
+        end else if (rec_exp_top == 3'b110) begin
+            // infinities
+            dbl_sign = rec_sign;
+            dbl_exp = '1;
+            dbl_sig = '0;
+        end else if (rec_exp_top == 3'b111) begin
+            // NaNs
+            dbl_sign = rec_sign;
+            dbl_exp = '1;
+            dbl_sig = '1;
+        end else if (rec_exp < ((2**((`HARD_FLOAT_EXP_WIDTH)-1))+2)) begin
+            // TODO: implement subnormal (treated as zero for now)
+            dbl_sign = rec_sign;
+            dbl_exp = 0;
+            dbl_sig = 0;
+        end else begin
+            // normal
+            dbl_sign = rec_sign;
+            dbl_exp = rec_exp
+                    - ((2**((`HARD_FLOAT_EXP_WIDTH)-1))+1)    // remove recoding offset
+                    - ((2**((`HARD_FLOAT_EXP_WIDTH)-1))-1)    // remove exponent bias
+                    + 1023;                                   // apply exponent bias
+            if (((`HARD_FLOAT_SIG_WIDTH)-1) < 52) begin
+                // zero-pad
+                dbl_sig = rec_sig << (52-((`HARD_FLOAT_SIG_WIDTH)-1));
+            end else begin
+                // truncate
+                dbl_sig = rec_sig >> (((`HARD_FLOAT_SIG_WIDTH)-1)-52);
+            end
         end
-    end
-endfunction
+
+        // assign the output
+        dbl_bits = {dbl_sign, dbl_exp, dbl_sig};
+        recfn2real = $bitstoreal(dbl_bits);
+    endfunction
+
+    // convert a real number to the HardFloat recoded format
+    function logic [((`HARD_FLOAT_EXP_WIDTH)+(`HARD_FLOAT_SIG_WIDTH)):0] real2recfn(input real in);
+        // double-precision format
+        logic dbl_sign;
+        logic [10:0] dbl_exp;
+        logic [51:0] dbl_sig;
+        logic [63:0] dbl_bits;
+
+        // recoded format
+        logic rec_sign;
+        int rec_exp_int;
+        logic [(`HARD_FLOAT_EXP_WIDTH):0] rec_exp;
+        logic [((`HARD_FLOAT_SIG_WIDTH)-2):0] rec_sig;
+
+        // deconstruct input
+        dbl_bits = $realtobits(in);
+        dbl_sign = dbl_bits[63];
+        dbl_exp = dbl_bits[62:52];
+        dbl_sig = dbl_bits[51:0];
+
+        if (dbl_exp == 0) begin
+            // zero or subnormal
+            // TODO: handle subnormal properly
+            rec_sign = dbl_sign;
+            rec_exp = '0;
+            rec_sig = '0;
+        end else if (dbl_exp == 11'h7FF) begin
+            if (dbl_sig == 0) begin
+                // infinities
+                rec_sign = dbl_sign;
+                rec_exp = {3'b110, {((`HARD_FLOAT_EXP_WIDTH)-2){1'b0}}};
+                rec_sig = '0;
+            end else begin
+                // NaNs
+                rec_sign = dbl_sign;
+                rec_exp = {3'b111, {((`HARD_FLOAT_EXP_WIDTH)-2){1'b0}}};
+                rec_sig = '0;
+            end
+        end else begin
+            // normal
+            rec_sign = dbl_sign;
+            rec_exp_int = dbl_exp
+                        - 1023                                     // remove exponent bias
+                        + ((2**((`HARD_FLOAT_EXP_WIDTH)-1))-1)     // apply exponent bias
+                        + ((2**((`HARD_FLOAT_EXP_WIDTH)-1))+1);    // apply recoding bias
+            if (rec_exp_int < ((2**((`HARD_FLOAT_EXP_WIDTH)-1))+2)) begin
+                // TODO: handle case where input is normal but output is subnormal
+                // for now the output is simply zero
+                rec_exp = '0;
+                rec_sig = '0;
+            end else if (rec_exp_int > ((3*(2**((`HARD_FLOAT_EXP_WIDTH)-1)))-1)) begin
+                // Exponent is too large to be represented, so treat as an infinity
+                rec_exp = {3'b110, {((`HARD_FLOAT_EXP_WIDTH)-2){1'b0}}};
+                rec_sig = '0;
+            end else begin
+                rec_exp = rec_exp_int;
+                if (((`HARD_FLOAT_SIG_WIDTH)-1) > 52) begin
+                    // zero-pad (lossless)
+                    rec_sig = dbl_sig << (((`HARD_FLOAT_SIG_WIDTH)-1)-52);
+                end else begin
+                    // truncate (lossy)
+                    rec_sig = dbl_sig >> (52-((`HARD_FLOAT_SIG_WIDTH)-1));
+                end
+            end
+        end
+
+        // assign the output
+        real2recfn = {rec_sign, rec_exp, rec_sig};
+    endfunction
+endpackage
 
 `define CALC_EXP(range, width) (clog2_math((real'(range))/((2.0**((width)-1))-1.0)))
 
@@ -71,139 +206,7 @@ endfunction
 `define FLOAT_TO_FIXED(value, exponent) \
     ((real'(value))*(2.0**(-(exponent))))
 
-// convert the HardFloat recoded format to a real number
-function real recfn2real(input logic [((`HARD_FLOAT_EXP_WIDTH)+(`HARD_FLOAT_SIG_WIDTH)):0] in);
-    // recoded format
-    logic rec_sign;
-    logic [(`HARD_FLOAT_EXP_WIDTH):0] rec_exp;
-    logic [((`HARD_FLOAT_SIG_WIDTH)-2):0] rec_sig;
-    logic [2:0] rec_exp_top;
-
-    // double-precision format
-    logic dbl_sign;
-    logic [10:0] dbl_exp;
-    logic [51:0] dbl_sig;
-    logic [63:0] dbl_bits;
-
-    // deconstruct input
-    rec_sign = in[`HARD_FLOAT_SIGN_BIT];
-    rec_exp = in[((`HARD_FLOAT_SIGN_BIT)-1):((`HARD_FLOAT_SIGN_BIT)-1-((`HARD_FLOAT_EXP_WIDTH)+1)+1)];
-    rec_sig = in[((`HARD_FLOAT_SIG_WIDTH)-2):0];
-    rec_exp_top = rec_exp[(`HARD_FLOAT_EXP_WIDTH):((`HARD_FLOAT_EXP_WIDTH)-3+1)];
-
-    // walk through various cases
-    if (rec_exp_top == 3'b000) begin
-        // zero
-        dbl_sign = rec_sign;
-        dbl_exp = 0;
-        dbl_sig = 0;
-    end else if (rec_exp_top == 3'b110) begin
-        // infinities
-        dbl_sign = rec_sign;
-        dbl_exp = '1;
-        dbl_sig = '0;
-    end else if (rec_exp_top == 3'b111) begin
-        // NaNs
-        dbl_sign = rec_sign;
-        dbl_exp = '1;
-        dbl_sig = '1;
-    end else if (rec_exp < ((2**((`HARD_FLOAT_EXP_WIDTH)-1))+2)) begin
-        // TODO: implement subnormal (treated as zero for now)
-        dbl_sign = rec_sign;
-        dbl_exp = 0;
-        dbl_sig = 0;
-    end else begin
-        // normal
-        dbl_sign = rec_sign;
-        dbl_exp = rec_exp
-                  - ((2**((`HARD_FLOAT_EXP_WIDTH)-1))+1)    // remove recoding offset
-                  - ((2**((`HARD_FLOAT_EXP_WIDTH)-1))-1)    // remove exponent bias
-                  + 1023;                                   // apply exponent bias
-        if (((`HARD_FLOAT_SIG_WIDTH)-1) < 52) begin
-            // zero-pad
-            dbl_sig = rec_sig << (52-((`HARD_FLOAT_SIG_WIDTH)-1));
-        end else begin
-            // truncate
-            dbl_sig = rec_sig >> (((`HARD_FLOAT_SIG_WIDTH)-1)-52);
-        end
-    end
-
-    // assign the output
-    dbl_bits = {dbl_sign, dbl_exp, dbl_sig};
-    recfn2real = $bitstoreal(dbl_bits);
-endfunction
-
 `define REC_FN_TO_REAL(value) recfn2real(value)
-
-// convert a real number to the HardFloat recoded format
-function logic [((`HARD_FLOAT_EXP_WIDTH)+(`HARD_FLOAT_SIG_WIDTH)):0] real2recfn(input real in);
-    // double-precision format
-    logic dbl_sign;
-    logic [10:0] dbl_exp;
-    logic [51:0] dbl_sig;
-    logic [63:0] dbl_bits;
-
-    // recoded format
-    logic rec_sign;
-    int rec_exp_int;
-    logic [(`HARD_FLOAT_EXP_WIDTH):0] rec_exp;
-    logic [((`HARD_FLOAT_SIG_WIDTH)-2):0] rec_sig;
-
-    // deconstruct input
-    dbl_bits = $realtobits(in);
-    dbl_sign = dbl_bits[63];
-    dbl_exp = dbl_bits[62:52];
-    dbl_sig = dbl_bits[51:0];
-
-    if (dbl_exp == 0) begin
-        // zero or subnormal
-        // TODO: handle subnormal properly
-        rec_sign = dbl_sign;
-        rec_exp = '0;
-        rec_sig = '0;
-    end else if (dbl_exp == 11'h7FF) begin
-        if (dbl_sig == 0) begin
-            // infinities
-            rec_sign = dbl_sign;
-            rec_exp = {3'b110, {((`HARD_FLOAT_EXP_WIDTH)-2){1'b0}}};
-            rec_sig = '0;
-        end else begin
-            // NaNs
-            rec_sign = dbl_sign;
-            rec_exp = {3'b111, {((`HARD_FLOAT_EXP_WIDTH)-2){1'b0}}};
-            rec_sig = '0;
-        end
-    end else begin
-        // normal
-        rec_sign = dbl_sign;
-        rec_exp_int = dbl_exp
-                      - 1023                                     // remove exponent bias
-                      + ((2**((`HARD_FLOAT_EXP_WIDTH)-1))-1)     // apply exponent bias
-                      + ((2**((`HARD_FLOAT_EXP_WIDTH)-1))+1);    // apply recoding bias
-        if (rec_exp_int < ((2**((`HARD_FLOAT_EXP_WIDTH)-1))+2)) begin
-            // TODO: handle case where input is normal but output is subnormal
-            // for now the output is simply zero
-            rec_exp = '0;
-            rec_sig = '0;
-        end else if (rec_exp_int > ((3*(2**((`HARD_FLOAT_EXP_WIDTH)-1)))-1)) begin
-            // Exponent is too large to be represented, so treat as an infinity
-            rec_exp = {3'b110, {((`HARD_FLOAT_EXP_WIDTH)-2){1'b0}}};
-            rec_sig = '0;
-        end else begin
-            rec_exp = rec_exp_int;
-            if (((`HARD_FLOAT_SIG_WIDTH)-1) > 52) begin
-                // zero-pad (lossless)
-                rec_sig = dbl_sig << (((`HARD_FLOAT_SIG_WIDTH)-1)-52);
-            end else begin
-                // truncate (lossy)
-                rec_sig = dbl_sig >> (52-((`HARD_FLOAT_SIG_WIDTH)-1));
-            end
-        end
-    end
-
-    // assign the output
-    real2recfn = {rec_sign, rec_exp, rec_sig};
-endfunction
 
 `define REAL_TO_REC_FN(value) real2recfn(value)
 
@@ -884,14 +887,15 @@ endfunction
     name = `INTF_FROM_REAL(expr, name)
 
 // module definitions
-
+/* verilator lint_off LITENDIAN */
+/* verilator lint_off REALCVT */
 module assertion_real #(
     `DECL_REAL(in),
     parameter name = "name"
 ) (
     `INPUT_REAL(in)
 );
-
+    import math_pkg::*;
     localparam real min = -(`RANGE_PARAM_REAL(in));
     localparam real max = +(`RANGE_PARAM_REAL(in));
 
@@ -904,6 +908,8 @@ module assertion_real #(
 
 endmodule
 
+/* verilator lint_off LITENDIAN */
+/* verilator lint_off REALCVT */
 module assign_real #(
     `DECL_REAL(in),
     `DECL_REAL(out)
@@ -911,6 +917,8 @@ module assign_real #(
     `INPUT_REAL(in),
     `OUTPUT_REAL(out)
 );
+    import math_pkg::*;
+    
     `ifdef FLOAT_REAL
         assign out = in;
     `elsif HARD_FLOAT
@@ -928,6 +936,8 @@ module assign_real #(
     `endif
 endmodule
 
+/* verilator lint_off LITENDIAN */
+/* verilator lint_off REALCVT */
 module add_sub_real #(
     `DECL_REAL(a),
     `DECL_REAL(b),
@@ -938,6 +948,8 @@ module add_sub_real #(
     `INPUT_REAL(b),
     `OUTPUT_REAL(c)
 );
+    import math_pkg::*;
+    
 `ifndef HARD_FLOAT
     `COPY_FORMAT_REAL(c, a_aligned);
     `COPY_FORMAT_REAL(c, b_aligned);
@@ -976,6 +988,8 @@ module add_sub_real #(
 `endif
 endmodule
 
+/* verilator lint_off LITENDIAN */
+/* verilator lint_off REALCVT */
 module negate_real #(
     `DECL_REAL(in),
     `DECL_REAL(out)
@@ -983,6 +997,8 @@ module negate_real #(
     `INPUT_REAL(in),
     `OUTPUT_REAL(out)
 );
+    import math_pkg::*;
+    
 `ifndef HARD_FLOAT
     // align the input to the output format
     `COPY_FORMAT_REAL(out, in_aligned);
@@ -995,6 +1011,8 @@ module negate_real #(
 `endif
 endmodule
 
+/* verilator lint_off LITENDIAN */
+/* verilator lint_off REALCVT */
 module abs_real #(
     `DECL_REAL(in),
     `DECL_REAL(out)
@@ -1002,6 +1020,8 @@ module abs_real #(
     `INPUT_REAL(in),
     `OUTPUT_REAL(out)
 );
+    import math_pkg::*;
+    
 `ifndef HARD_FLOAT
     // align the input to the output format
     `COPY_FORMAT_REAL(out, in_aligned);
@@ -1014,6 +1034,8 @@ module abs_real #(
 `endif
 endmodule
 
+/* verilator lint_off LITENDIAN */
+/* verilator lint_off REALCVT */
 module mul_real #(
     `DECL_REAL(a),
     `DECL_REAL(b),
@@ -1023,6 +1045,8 @@ module mul_real #(
     `INPUT_REAL(b),
     `OUTPUT_REAL(c)
 );
+    import math_pkg::*;
+    
 `ifndef HARD_FLOAT
     // create wire to hold product result
     `MAKE_FORMAT_REAL(
@@ -1052,6 +1076,8 @@ module mul_real #(
 `endif
 endmodule
 
+/* verilator lint_off LITENDIAN */
+/* verilator lint_off REALCVT */
 module comp_real #(
     `DECL_REAL(a),
     `DECL_REAL(b),
@@ -1061,6 +1087,8 @@ module comp_real #(
     `INPUT_REAL(b),
     output wire logic c
 );
+    import math_pkg::*;
+    
 `ifndef HARD_FLOAT
     // compute the minimum of the two exponents and align both inputs to it
 
@@ -1132,6 +1160,8 @@ module comp_real #(
 `endif
 endmodule
 
+/* verilator lint_off LITENDIAN */
+/* verilator lint_off REALCVT */
 module ite_real #(
     `DECL_REAL(true),
     `DECL_REAL(false),
@@ -1142,6 +1172,8 @@ module ite_real #(
     `INPUT_REAL(false),
     `OUTPUT_REAL(out)
 );
+    import math_pkg::*;
+    
     `COPY_FORMAT_REAL(out,  true_aligned);
     `COPY_FORMAT_REAL(out, false_aligned);
 
@@ -1150,7 +1182,8 @@ module ite_real #(
 
     assign out = (cond == 1'b1) ? true_aligned : false_aligned;
 endmodule
-
+/* verilator lint_off LITENDIAN */
+/* verilator lint_off REALCVT */
 module dff_real #(
     `DECL_REAL(d),
     `DECL_REAL(q),
@@ -1162,6 +1195,8 @@ module dff_real #(
     input wire logic clk,
     input wire logic cke
 );
+    import math_pkg::*;
+    
     // "var" for memory is kept internal
     // so that all ports are "wire" type nets
     `COPY_FORMAT_REAL(q, q_mem);
@@ -1187,6 +1222,8 @@ module dff_real #(
     end       
 endmodule
 
+/* verilator lint_off LITENDIAN */
+/* verilator lint_off REALCVT */
 module sync_rom_real #(
     `DECL_REAL(out),
     parameter integer addr_bits=1,
@@ -1199,6 +1236,8 @@ module sync_rom_real #(
     input wire logic clk,
     input wire logic ce
 );
+    import math_pkg::*;
+    
     // load the ROM
     logic signed [(data_bits-1):0] rom [0:((2**addr_bits)-1)];
     initial begin
@@ -1230,7 +1269,8 @@ endmodule
 
 // adapted from the example on page 119-120 here:
 // https://www.xilinx.com/support/documentation/sw_manuals/xilinx2019_2/ug901-vivado-synthesis.pdf
-
+/* verilator lint_off LITENDIAN */
+/* verilator lint_off REALCVT */
 module sync_ram_real #(
     `DECL_REAL(out),
     parameter integer addr_bits=1,
@@ -1244,6 +1284,8 @@ module sync_ram_real #(
     input wire logic ce,
     input wire logic we
 );
+    import math_pkg::*;
+    
     // memory contents
     logic signed [(data_bits-1):0] ram [0:((2**addr_bits)-1)];
 
@@ -1274,7 +1316,8 @@ module sync_ram_real #(
 endmodule
 
 // measuring the width of an integer
-
+/* verilator lint_off LITENDIAN */
+/* verilator lint_off REALCVT */
 module meas_uint_width #(
     parameter integer in_width=1,
     parameter integer out_width=1
@@ -1282,6 +1325,8 @@ module meas_uint_width #(
     input wire [(in_width-1):0] in,
     output reg [(out_width-1):0] out
 );
+    import math_pkg::*;
+    
     integer i;
     always @(*) begin
         if (in == 0) begin
@@ -1298,7 +1343,8 @@ endmodule
 
 // Compressing an integer
 // TODO: handle "inf" case for HARD_FLOAT
-
+/* verilator lint_off LITENDIAN */
+/* verilator lint_off REALCVT */
 module compress_uint #(
     parameter integer in_width=1,
     `DECL_REAL(out)
@@ -1306,6 +1352,8 @@ module compress_uint #(
     input wire [(in_width-1):0] in,
     `OUTPUT_REAL(out)
 );
+    import math_pkg::*;
+    
     `ifdef FLOAT_REAL
         real x, y;
         always @(in) begin

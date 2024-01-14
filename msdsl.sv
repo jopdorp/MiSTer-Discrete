@@ -285,7 +285,8 @@
 /////////////////////////////////////////////////
 
 // Edge detector
-
+/* verilator lint_off REALCVT */
+/* verilator lint_off LITENDIAN */
 module edge_det_msdsl #(
 	parameter init = 0,
     parameter active = 1
@@ -295,7 +296,7 @@ module edge_det_msdsl #(
     input wire logic clk,
     input wire logic rst
 );
-
+    import math_pkg::*;
 	// internal state
 	logic last;
 	always @(posedge clk) begin
@@ -312,7 +313,8 @@ module edge_det_msdsl #(
 endmodule
 
 // Generic DFF
-
+/* verilator lint_off LITENDIAN */
+/* verilator lint_off REALCVT */
 module mem_digital #(
     parameter init = 0,
     parameter width = 1
@@ -323,7 +325,7 @@ module mem_digital #(
     input wire logic rst,
     input wire logic cke
 );
-
+    import math_pkg::*;
     // internal state
 
     logic [(width-1):0] state;
@@ -345,7 +347,8 @@ module mem_digital #(
 endmodule
 
 // Synchronous ROM (unsigned integer)
-
+/* verilator lint_off LITENDIAN */
+/* verilator lint_off REALCVT */
 module sync_rom_uint #(
     parameter integer addr_bits=1,
     parameter integer data_bits=1,
@@ -356,6 +359,7 @@ module sync_rom_uint #(
     input wire logic clk,
     input wire logic ce
 );
+    import math_pkg::*;
     // load the ROM
     logic [(data_bits-1):0] rom [0:((2**addr_bits)-1)];
     initial begin
@@ -375,7 +379,8 @@ module sync_rom_uint #(
 endmodule
 
 // PWM model
-
+/* verilator lint_off LITENDIAN */
+/* verilator lint_off REALCVT */
 module pwm #(
     parameter real duty = 0.5,
     parameter real freq = 1e6,
@@ -386,7 +391,7 @@ module pwm #(
     input wire logic clk,
     input wire logic rst
 );
-
+    import math_pkg::*;
     // store the time on and the time off
     localparam real period = 1.0/freq;
     localparam real time_on = (1.0*duty)*period;
@@ -451,7 +456,8 @@ endmodule
 
 // Linear congruential generator, using the equation
 // defined in IEEE-1364-2001, pp. 318-319
-
+/* verilator lint_off LITENDIAN */
+/* verilator lint_off REALCVT */
 module lcg_msdsl (
     input clk,
     input rst,
@@ -459,6 +465,7 @@ module lcg_msdsl (
     input [31:0] seed,
     output reg [31:0] out
 );
+    import math_pkg::*;
     always @(posedge clk) begin
         if (rst) begin
             out <= seed;
@@ -497,11 +504,11 @@ THE SOFTWARE.
 
 // Language: Verilog 2001
 
-`timescale 1ns / 1ps
-
 /*
  * AXI4-Stream MT19937 Mersenne Twister
  */
+/* verilator lint_off LITENDIAN */
+/* verilator lint_off REALCVT */
 module axis_mt19937
 (
     input  wire         clk,
@@ -525,7 +532,7 @@ module axis_mt19937
     input  wire [31:0]  seed_val,
     input  wire         seed_start
 );
-
+import math_pkg::*;
 // state register
 localparam [1:0]
     STATE_IDLE = 2'd0,
@@ -732,7 +739,8 @@ endmodule
 //////////////////// end of verilog-mersenne by alexforencich
 ////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////
-
+/* verilator lint_off LITENDIAN */
+/* verilator lint_off REALCVT */
 module mt19937_wrapper (
     input wire logic clk,
     input wire logic rst,
@@ -740,6 +748,7 @@ module mt19937_wrapper (
     input wire logic [31:0] seed,
     output wire logic [31:0] out
 );
+    import math_pkg::*;
     // internal signals
     logic [31:0] tdata;
     logic tvalid;

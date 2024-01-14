@@ -6,7 +6,15 @@
  *  This program is free software under the terms of the GPLv3, see LICENCSE.txt
  *
  ********************************************************************************/
+// Define macro for clock CLK_MSDSL
+`define CLK_MSDSL 1'b1
+// Define macro for RST_MSDSL
+`define RST_MSDSL 1'b1
+`include "svreal.sv"
+`include "msdsl.sv"
+
 module dk_walk_tb();
+    import math_pkg::*;
 
     reg clk = 0;
     reg audio_clk_en = 0;
@@ -21,6 +29,9 @@ module dk_walk_tb();
     localparam steps = CYCLES_PER_SAMPLE * 1400;
     localparam HIGH_TIME = 1;
     localparam LOW_TIME = 6;
+
+    assign CLK_MSDSL = clk;
+    assign RST_MSDSL = I_RSTn;
 
     dk_walk #(.CLOCK_RATE(CLOCK_RATE),.SAMPLE_RATE(SAMPLE_RATE)) walk (
         .clk(clk),
