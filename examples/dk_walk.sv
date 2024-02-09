@@ -6,8 +6,8 @@
  *  This program is free software under the terms of the GPLv3, see LICENCSE.txt
  *
  ********************************************************************************/
- `include "../svreal.sv"
- `include "../msdsl.sv"
+ `include "svreal.sv"
+ `include "msdsl.sv"
 
 `define RST_MSDSL I_RSTn
 `define CLK_MSDSL clk

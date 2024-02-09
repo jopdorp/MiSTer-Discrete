@@ -1,29 +1,23 @@
-// Model generated on 2023-12-30 11:43:34.443002
+// Model generated on 2024-02-08 22:37:14.201017
+
+`timescale 1ns/1ps
 
 `include "svreal.sv"
 `include "msdsl.sv"
 
 `default_nettype none
 
-`define RST_MSDSL I_RSTn
-`define CLK_MSDSL clk
-
-/* verilator lint_off LITENDIAN */
-/* verilator lint_off REALCVT */
 module WalkEnAstable555 #(
     `DECL_REAL(walk_en),
     `DECL_REAL(square_wave),
     `DECL_REAL(vcc),
     `DECL_REAL(v_control)
 ) (
-    input clk,
-    input I_RSTn,
     `INPUT_REAL(walk_en),
     `INPUT_REAL(square_wave),
     `INPUT_REAL(vcc),
     `OUTPUT_REAL(v_control)
 );
-    import math_pkg::*;
     // Declaring internal variables.
     `MAKE_REAL(tmp_circ_4, `RANGE_PARAM_REAL(v_control));
     // Assign signal: tmp_circ_4
