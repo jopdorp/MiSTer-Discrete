@@ -16,7 +16,8 @@ Once the circuit is done you can convert it into a MiSTer-Discrete compatible co
 python ./anasymod_converter.py -m walk_en_astable_555 -f 96000 -v 5
 ```
 
-In the above `-f 96000` is the `clk_enable` frequency. It's advisable to use oversampling. In this case the `audio_clk_enable` might be `48000`.
+In the above `-f 96000` is the `audio_clk_en` frequency at oversampled speed. In this case the `audio_clk_en` of the rest of the MiSTer core, outside of the MiSTer-Discrete subcores might be `48000`.
+
 The `-v 5` argument is the `vcc` voltage, this has to be the same `vcc` as in the rest of your MiSTer-Discrete analog simulation core.
 
-The script will output a file called `fixed_point_WalkEnAstable555.sv` this file is compatible with MiSTer-Discrete and quartus 17.0 and can be used in your core.
+The script will output a file called `WalkEnAstable555.sv` this file is compatible with MiSTer-Discrete and quartus 17.0 and can be used in your core.

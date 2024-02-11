@@ -6,16 +6,7 @@
  *  This program is free software under the terms of the GPLv3, see LICENCSE.txt
  *
  ********************************************************************************/
-// Define macro for clock CLK_MSDSL
-`define CLK_MSDSL 1'b1
-// Define macro for RST_MSDSL
-`define RST_MSDSL 1'b1
-`include "svreal.sv"
-`include "msdsl.sv"
-
 module dk_walk_tb();
-    import math_pkg::*;
-
     reg clk = 0;
     reg audio_clk_en = 0;
     reg walk_en = 0;

@@ -6,12 +6,6 @@
  *  This program is free software under the terms of the GPLv3, see LICENCSE.txt
  *
  ********************************************************************************/
- `include "svreal.sv"
- `include "msdsl.sv"
-
-`define RST_MSDSL I_RSTn
-`define CLK_MSDSL clk
-
 module dk_walk #(
     parameter CLOCK_RATE = 1000000,
     parameter SAMPLE_RATE = 48000
@@ -22,7 +16,6 @@ module dk_walk #(
     input walk_en,
     output reg signed[15:0] out = 0
 );
-    import math_pkg::*;
     wire signed[15:0] square_osc_out;
     wire signed[15:0] v_control;
     wire signed[15:0] mixer_input[1:0];
@@ -57,10 +50,11 @@ module dk_walk #(
 
     WalkEnAstable555 walk_en_astable (
         .clk(clk),
+        .audio_clk_en(audio_clk_en),
         .I_RSTn(I_RSTn),
         .walk_en(walk_en_5volts_filtered),
         .square_wave(square_osc_out),
-        .vcc(12),
+        .vcc(5),
         .v_control(v_control)
     );
 
@@ -136,7 +130,8 @@ module dk_walk #(
         if(!I_RSTn)begin
             out <= 0;
         end else if(audio_clk_en)begin
-            out <= walk_en_oscilated_band_passed;
+            // out <= walk_en_oscilated_band_passed;
+            out <= v_control;
         end
     end
 

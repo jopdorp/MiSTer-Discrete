@@ -31,7 +31,7 @@ def replace_input_real(line, inputs):
     matches = re.findall(r'`INPUT_REAL\((.*?)\)', line)
     for match in matches:
         input_signal = match
-        line = f'    input signed wire[0:{mister_discrete_precision + 1}] {input_signal},\n'
+        line = f'    input signed[0:{mister_discrete_precision + 1}] {input_signal},\n'
         inputs += [input_signal]
     return line
 
@@ -39,7 +39,7 @@ def replace_make_real(line, points):
     matches = re.findall(r'`MAKE_REAL\((.*?), (.*?)\)', line)
     for match in matches:
         input_signal, output_signal = match
-        line = f'    signed reg [0:{high_bit}] {input_signal};  // Point: 12 \n\n'
+        line = f'    reg signed[0:{high_bit}] {input_signal} = 0;  // Point: 12 \n\n'
         points[input_signal.strip()] = 12
     return line
 
@@ -94,7 +94,7 @@ def declare_tmp_vars(lines, tmp_var_count):
         match = re.search(r'(module.*\);)', start_of_file, re.DOTALL)
         if match:
             for j in range(tmp_var_count):
-                lines.insert(i + 1 + j, f'    signed wire[0:{high_bit}] tmp{j};\n')
+                lines.insert(i + 1 + j, f'    wire signed[0:{high_bit}] tmp{j};\n')
             lines.insert(i + 2 + j, f'\n')
             break
         start_of_file += '\n' + lines[i]
@@ -106,7 +106,7 @@ def denormalize_inputs(lines, inputs, points):
         match = re.search(r'(module.*\);)', start_of_file, re.DOTALL)
         if match:
             for j, input in enumerate(inputs): # TODO properly take into account point of VCC
-                lines.insert(i + 1 + j, f'    signed wire[0:{high_bit}] {input}_denormalized; // Point {fractional_precision} \n    assign {input}_denormalized = {input} * {vcc} >> {mister_discrete_precision - fractional_precision};\n')
+                lines.insert(i + 1 + j, f'    wire signed[0:{high_bit}] {input}_denormalized; // Point {fractional_precision} \n    assign {input}_denormalized = {input} * {vcc} >> {mister_discrete_precision - fractional_precision};\n')
                 points[input + '_denormalized'] = fractional_precision
             lines.insert(i + 2 + j, f'\n')
             break
@@ -123,14 +123,19 @@ def remove_parameters(lines):
             continue
         if found_match:
             if re.search(r'\) ', lines[i]):
-                lines[i] = '( \n'
+                lines[i] = (
+                    '( \n'
+                    '    input clk, \n'
+                    '    input audio_clk_en, \n'
+                    '    input I_RSTn, \n'
+                )
                 break
             lines[i] = ''
     return lines
 
 
 def replace_output_real(code):
-    return re.sub(r'`OUTPUT_REAL\((.*?)\)', rf'output signed wire[0:{mister_discrete_precision + 1}] \1', code)
+    return re.sub(r'`OUTPUT_REAL\((.*?)\)', rf'output signed[0:{mister_discrete_precision + 1}] \1', code)
 
 def replace_dff_into_real(line, points):
     matches = re.findall(r'`DFF_INTO_REAL\((.*?), (.*?), (.*?), (.*?), (.*?), (.*?)\);', line)
@@ -144,11 +149,13 @@ def replace_dff_into_real(line, points):
             input_signal1 = f'({input_signal1} << {point2 - point1})'
 
         new_expression = (
-            f"    always @(posedge {match[3]}) begin\n"
-            f"        if ({match[2]}) begin\n"
-            f"            {match[1]} <= {high_bit + 1}'b0;\n"
-            f"        end else begin\n"
-            f"            {match[1]} <= {{ {{ {fractional_precision}{{ {input_signal2}[{high_bit}]}}}}, {input_signal2} }} - {input_signal1};  // Point: {max(point1, point2)}\n"
+            f"    always @(posedge clk) begin\n"
+            f"        if (audio_clk_en) begin\n"
+            f"            if (~I_RSTn) begin\n"
+            f"                {match[1]} <= {high_bit + 1}'b0;\n"
+            f"            end else begin\n"
+            f"                {match[1]} <= {input_signal2} - {input_signal1};  // Point: {max(point1, point2)}\n"
+            f"            end\n"
             f"        end\n"
             f"    end\n"
         )
@@ -182,13 +189,17 @@ def convert_file(input_filename, output_filename):
             lines[i] = replace_output_real(lines[i])
         for i in range(len(lines)):
             lines[i] = replace_dff_into_real(lines[i], points)
+        for i in range(len(lines)):
+            matcher = r'`(((include)|default|timescale).*)'
+            if re.search(matcher, lines[i].strip()):
+                lines[i] = ''
         lines = declare_tmp_vars(lines, tmp_var_count)
-            
+
     with open(output_filename, 'w') as output_file:
         output_file.writelines(lines)
 
 filename = args.input
-out_filename = f'fixed_point_{filename}'
+out_filename = f'{filename}'
 print('Converting file: ' + filename)
 convert_file(filename, out_filename)
 print('Model will be written to: ' + out_filename)
