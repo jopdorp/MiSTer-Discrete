@@ -1,7 +1,7 @@
 # MiSTer Discrete
 
 This is an effort to make the real-time simulation of analog circuits possible on MiSTer.
-## Why this is important
+## Why this is needed
 
 * Many old computers have analog circuits that are a step between the tape input and the chip.
 * Many old arcade games have analog sound synthesis circuits
@@ -41,6 +41,15 @@ This leaves some room for voltages that are higher than VCC, caused by capacitor
 Ground, or v_ref is equivalent to 0 on the output or input signals.
 
 Each time audio_clk_en goes high, the modules set their outputs as a direct relationship between their individual current state and their input signals.
+
+## Setting up your environment
+Anasymod needs python 3.7, so that's what we'll use:
+```
+sudo apt install python3.7
+sudo apt install python3.7-venv
+/usr/bin/python3.7 -m venv venv
+pip install -r requirements.txt
+```
 
 ## Testing modules
 
