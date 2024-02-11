@@ -16,3 +16,5 @@ wisdom.fftw
 left.txt
 right.txt
 __pycache__/
+anasymod/fixed_point_WalkEnAstable555.sv
+anasymod/WalkEnAstable555.sv
