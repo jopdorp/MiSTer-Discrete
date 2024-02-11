@@ -1,7 +1,11 @@
 import re
 import math
 
-precision = 12  # 12 leaves 5 bits in reg [0:16] for the integer part of VCC, which is normally between 5 and 24
+precision = 12  
+headroom = 5  # 5 bits of headroom for the integer part of, which is normally between 5 and 24
+high_bit = precision + headroom - 1 
+mister_discrete_precision = 14
+VCC = 5
 
 def convert_to_fixed_point(real_value):
     mantissa, exponent = math.frexp(real_value)
@@ -21,7 +25,7 @@ def replace_make_real(line, points):
     matches = re.findall(r'`MAKE_REAL\((.*?), (.*?)\)', line)
     for match in matches:
         input_signal, output_signal = match
-        line = f'    reg [0:16] {input_signal};  // Point: 12 \n\n'
+        line = f'    reg [0:{high_bit}] {input_signal};  // Point: 12 \n\n'
         points[input_signal.strip()] = 12
     return line
 
@@ -52,17 +56,19 @@ def replace_add_real(line, points):
         elif point2 > point1:
             input_signal1 = f'({input_signal1} << {point2 - point1})'
         old_expression = f'`ADD_REAL({match[0]}, {match[1]}, {match[2]})'
-        new_expression = f'{output_signal} = {input_signal1} + {input_signal2}'
+        new_expression = f'{output_signal} = {input_signal1} + {input_signal2}; // Point: {max(point1, point2)}'
         line = line.replace(old_expression, new_expression)
     return line, len(matches)
 
-def replace_assign_real(line, scale_factor):
-    fixed_point_scale_factor, point = convert_to_fixed_point(scale_factor)
+def replace_assign_real(line, points):
+    NORMALIZED_VCC = 2**mister_discrete_precision - 1  # {14{1'b1}} is equivalent to 2^14 - 1
+    scale_factor = NORMALIZED_VCC / VCC
+
     matches = re.findall(r'`ASSIGN_REAL\((.*?), (.*?)\)', line) 
     for match in matches:
         input_signal, output_signal = match
         old_expression = f'`ASSIGN_REAL({input_signal}, {output_signal})'
-        new_expression = f'{output_signal} = ({input_signal} * {fixed_point_scale_factor}) >> {point};  // Scale factor: {scale_factor}, Point: {point}'
+        new_expression = f'{output_signal} = ({input_signal} * {scale_factor}) >> {points.get(input_signal.strip(), 0)};  // Scale factor: {scale_factor}, Point: {mister_discrete_precision}'
         line = line.replace(old_expression, new_expression)
     return line
 
@@ -73,19 +79,19 @@ def declare_tmp_vars(lines, tmp_var_count):
         match = re.search(r'(module.*\);)', start_of_file, re.DOTALL)
         if match:
             for j in range(tmp_var_count):
-                lines.insert(i + 1 + j, f'    reg[0:{16+j}] tmp{j};\n')
+                lines.insert(i + 1 + j, f'    reg[0:{high_bit +j}] tmp{j};\n')
             lines.insert(i + 2 + j, f'\n')
             break
         start_of_file += '\n' + lines[i]
     return lines
 
-def denormalize_inputs(lines, inputs, points, scale_factor):
+def denormalize_inputs(lines, inputs, points):
     start_of_file = ""
     for i in range(len(lines)):
         match = re.search(r'(module.*\);)', start_of_file, re.DOTALL)
         if match:
             for j, input in enumerate(inputs): # TODO properly take into account point of VCC
-                lines.insert(i + 1 + j, f'    wire[0:16] {input}_denormalized; // Point {precision} \n    assign {input}_denormalized = {input} * {1/scale_factor} >> {precision};\n')
+                lines.insert(i + 1 + j, f'    wire[0:{high_bit}] {input}_denormalized; // Point {precision} \n    assign {input}_denormalized = {input} * {VCC} >> {mister_discrete_precision - precision};\n')
                 points[input + '_denormalized'] = precision
             lines.insert(i + 2 + j, f'\n')
             break
@@ -110,9 +116,6 @@ def remove_parameters(lines):
 def convert_file(input_filename, output_filename):
     points = {}
     inputs = []
-    VCC = 5
-    MAX_VALUE = 2**14 - 1  # {14{1'b1}} is equivalent to 2^14 - 1
-    SCALE_FACTOR = VCC / MAX_VALUE
 
     with open(input_filename, 'r') as input_file:
         lines = input_file.readlines()
@@ -120,7 +123,7 @@ def convert_file(input_filename, output_filename):
         lines = remove_parameters(lines)
         for i in range(len(lines)):
             lines[i] = replace_input_real(lines[i], inputs)
-        lines = denormalize_inputs(lines, inputs, points, SCALE_FACTOR)
+        lines = denormalize_inputs(lines, inputs, points)
         for i in range(len(lines)):
             lines[i] = replace_make_real(lines[i], points)
         for i in range(len(lines)):
@@ -130,7 +133,7 @@ def convert_file(input_filename, output_filename):
             lines[i], count = replace_add_real(lines[i], points)
             tmp_var_count += count
         for i in range(len(lines)):
-            lines[i] = replace_assign_real(lines[i], SCALE_FACTOR)
+            lines[i] = replace_assign_real(lines[i], points)
         lines = declare_tmp_vars(lines, tmp_var_count)
 
                   
