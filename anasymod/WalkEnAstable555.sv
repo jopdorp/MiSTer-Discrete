@@ -1,4 +1,4 @@
-// Model generated on 2024-02-08 22:37:14.201017
+// Model generated on 2024-02-11 21:27:39.942545
 
 `timescale 1ns/1ps
 
@@ -21,10 +21,10 @@ module WalkEnAstable555 #(
     // Declaring internal variables.
     `MAKE_REAL(tmp_circ_4, `RANGE_PARAM_REAL(v_control));
     // Assign signal: tmp_circ_4
-    `MUL_CONST_REAL(0.9988949512946891, tmp_circ_4, tmp0);
-    `MUL_CONST_REAL(0.00021549311726031938, square_wave, tmp1);
-    `MUL_CONST_REAL(0.0006309638473382152, vcc, tmp2);
-    `MUL_CONST_REAL(0.0002585917407123833, walk_en, tmp3);
+    `MUL_CONST_REAL(0.9988949505878484, tmp_circ_4, tmp0);
+    `MUL_CONST_REAL(0.0006309642509321234, vcc, tmp1);
+    `MUL_CONST_REAL(0.00021549325509976887, square_wave, tmp2);
+    `MUL_CONST_REAL(0.00025859190611972273, walk_en, tmp3);
     `ADD_REAL(tmp0, tmp1, tmp4);
     `ADD_REAL(tmp2, tmp3, tmp5);
     `ADD_REAL(tmp4, tmp5, tmp6);

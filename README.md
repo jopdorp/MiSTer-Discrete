@@ -33,8 +33,8 @@ Each subcircuit is implmented as a module that can be instantiated with paramete
   
 ports:
 * input wire clk, audio_clk_en
-* input wire[15:0] \<input name\>; // optinonal unsigned input signals
-* output reg[15:0] out; // unsigned output signal
+* input signed wire[15:0] \<input name\>; // optinonal signed input signals
+* output signed reg[15:0] out; // signed output signal
 
 VCC, or v_plus is equivalent to {14{1'b1}} on the output or input signals.
 This leaves some room for voltages that are higher than VCC, caused by capacitors/filters;
@@ -65,3 +65,8 @@ This will make the chances of reusability higher.
 Think about how common a certain subcircuit might be, when choosing how to break up a circuit into modules of smaller subcircuits.
 
 When you have completed and tested you module, create a pull request, and one of the core developers will review and merge it :)
+
+## Anasymod
+
+Some circuits are difficult to implement without a more generic circuit simulator, for these cases we use anasymod.
+See anasymode/README.md in this repository.

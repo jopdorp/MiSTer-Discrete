@@ -1,9 +1,23 @@
+from argparse import ArgumentParser
 import re
 import math
 
-fractional_precision = 12  # bits of precision for the fractional part of the fixed point number
-VCC = 5
-integer_precision = next(y for y in range(32) if 2**y > VCC) + 1 # plus 1 for the sign bit
+# Usage:
+# get filename from command line arguments
+        
+print('Converting to fixed point...')
+
+# parse command line arguments
+parser = ArgumentParser()
+parser.add_argument('-i', '--input', type=str)
+parser.add_argument('-v', '--vcc', type=int, default=5)
+parser.add_argument('-p', '--fractional-precision', type=int, default=12)
+args = parser.parse_args()
+
+
+fractional_precision = args.fractional_precision  # bits of precision for the fractional part of the fixed point number
+vcc = args.vcc
+integer_precision = next(y for y in range(32) if 2**y > vcc) + 1 # plus 1 for the sign bit
 high_bit = fractional_precision + integer_precision - 1 
 mister_discrete_precision = 14
 
@@ -63,7 +77,7 @@ def replace_add_real(line, points):
 
 def replace_assign_real(line, points):
     NORMALIZED_VCC = 2**mister_discrete_precision - 1  # {14{1'b1}} is equivalent to 2^14 - 1
-    scale_factor = int(NORMALIZED_VCC / VCC)
+    scale_factor = int(NORMALIZED_VCC / vcc)
 
     matches = re.findall(r'`ASSIGN_REAL\((.*?), (.*?)\)', line) 
     for match in matches:
@@ -92,7 +106,7 @@ def denormalize_inputs(lines, inputs, points):
         match = re.search(r'(module.*\);)', start_of_file, re.DOTALL)
         if match:
             for j, input in enumerate(inputs): # TODO properly take into account point of VCC
-                lines.insert(i + 1 + j, f'    signed wire[0:{high_bit}] {input}_denormalized; // Point {fractional_precision} \n    assign {input}_denormalized = {input} * {VCC} >> {mister_discrete_precision - fractional_precision};\n')
+                lines.insert(i + 1 + j, f'    signed wire[0:{high_bit}] {input}_denormalized; // Point {fractional_precision} \n    assign {input}_denormalized = {input} * {vcc} >> {mister_discrete_precision - fractional_precision};\n')
                 points[input + '_denormalized'] = fractional_precision
             lines.insert(i + 2 + j, f'\n')
             break
@@ -169,11 +183,13 @@ def convert_file(input_filename, output_filename):
         for i in range(len(lines)):
             lines[i] = replace_dff_into_real(lines[i], points)
         lines = declare_tmp_vars(lines, tmp_var_count)
-
-                  
             
     with open(output_filename, 'w') as output_file:
         output_file.writelines(lines)
 
-# Usage:
-convert_file('WalkEnAstable555.sv', 'WalkEnAstable555_fixed_point.sv')
+filename = args.input
+out_filename = f'fixed_point_{filename}'
+print('Converting file: ' + filename)
+convert_file(filename, out_filename)
+print('Model will be written to: ' + out_filename)
+print('Done!')
