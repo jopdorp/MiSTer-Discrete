@@ -1,8 +1,8 @@
 import re
 import math
 
-precision = 12  
-headroom = 5  # 5 bits of headroom for the integer part of, which is normally between 5 and 24
+precision = 10  # bits of precision for the fractional part of the fixed point number
+headroom = 4  # bits of precision for the integer part of, which is normally between 5 and 24
 high_bit = precision + headroom - 1 
 mister_discrete_precision = 14
 VCC = 5
@@ -17,7 +17,7 @@ def replace_input_real(line, inputs):
     matches = re.findall(r'`INPUT_REAL\((.*?)\)', line)
     for match in matches:
         input_signal = match
-        line = f'    reg [0:15] {input_signal} \n'
+        line = f'    input reg[0:15] {input_signal},\n'
         inputs += [input_signal]
     return line
 
@@ -43,6 +43,12 @@ def replace_mul_const_real(line, points, inputs):
         new_expression = f'{output_signal} = ({input_signal} * {fixed_point_value}) >> {precision};  // Point: {total_point}'
         line = line.replace(old_expression, new_expression)
         points[output_signal.strip()] = total_point
+
+        # this version sets the point the same for all signals
+        # shift = point + points.get(input_signal.strip(), 0) - precision
+        # new_expression = f'{output_signal} = ({input_signal} * {fixed_point_value}) >> {shift};  // Point: {precision}'
+        # line = line.replace(old_expression, new_expression)
+        # points[output_signal.strip()] = precision
     return line, len(matches)
 
 def replace_add_real(line, points):
@@ -58,6 +64,7 @@ def replace_add_real(line, points):
         old_expression = f'`ADD_REAL({match[0]}, {match[1]}, {match[2]})'
         new_expression = f'{output_signal} = {input_signal1} + {input_signal2}; // Point: {max(point1, point2)}'
         line = line.replace(old_expression, new_expression)
+        points[output_signal.strip()] = max(point1, point2)
     return line, len(matches)
 
 def replace_assign_real(line, points):
@@ -73,13 +80,13 @@ def replace_assign_real(line, points):
     return line
 
 
-def declare_tmp_vars(lines, tmp_var_count):
+def declare_tmp_vars(lines, tmp_var_count, points):
     start_of_file = ""
     for i in range(len(lines)):
         match = re.search(r'(module.*\);)', start_of_file, re.DOTALL)
         if match:
             for j in range(tmp_var_count):
-                lines.insert(i + 1 + j, f'    reg[0:{high_bit +j}] tmp{j};\n')
+                lines.insert(i + 1 + j, f'    reg[0:{points.get(f"tmp{j}") + headroom }] tmp{j};\n')
             lines.insert(i + 2 + j, f'\n')
             break
         start_of_file += '\n' + lines[i]
@@ -113,6 +120,39 @@ def remove_parameters(lines):
             lines[i] = ''
     return lines
 
+
+def replace_output_real(code):
+    return re.sub(r'`OUTPUT_REAL\((.*?)\)', r'output reg[0:15] \1', code)
+
+def replace_dff_into_real(line, points):
+    matches = re.findall(r'`DFF_INTO_REAL\((.*?), (.*?), (.*?), (.*?), (.*?), (.*?)\);', line)
+    for match in matches:
+        input_signal1, input_signal2, reset_signal, clock_signal, one, zero = [x.strip() for x in match]
+        point1 = points.get(input_signal1, 0)
+        point2 = points.get(input_signal2, 0)
+        if point1 > point2:
+            input_signal2 = f'({input_signal2} << {point1 - point2})'
+        elif point2 > point1:
+            input_signal1 = f'({input_signal1} << {point2 - point1})'
+
+
+
+        # `DFF_INTO_REAL(tmp6, tmp_circ_4, `RST_MSDSL, `CLK_MSDSL, 1'b1, 0);
+        old_expression = f'`DFF_INTO_REAL({match[0]}, {match[1]}, {match[2]}, {match[3]}, {match[4]}, {match[5]})'
+        new_expression = (
+            f"    always @(posedge {match[3]}) begin\n"
+            f"        if ({match[2]}) begin\n"
+            f"            {input_signal2} <= 16'b0;\n"
+            f"        end else begin\n"
+            f"            {input_signal2} <= {input_signal2} - {input_signal1};  // Point: {max(point1, point2)}\n"
+            f"        end\n"
+            f"    end\n"
+        )
+        line = new_expression
+    return line
+
+
+    
 def convert_file(input_filename, output_filename):
     points = {}
     inputs = []
@@ -134,7 +174,11 @@ def convert_file(input_filename, output_filename):
             tmp_var_count += count
         for i in range(len(lines)):
             lines[i] = replace_assign_real(lines[i], points)
-        lines = declare_tmp_vars(lines, tmp_var_count)
+        for i in range(len(lines)):
+            lines[i] = replace_output_real(lines[i])
+        for i in range(len(lines)):
+            lines[i] = replace_dff_into_real(lines[i], points)
+        lines = declare_tmp_vars(lines, tmp_var_count, points)
 
                   
             
