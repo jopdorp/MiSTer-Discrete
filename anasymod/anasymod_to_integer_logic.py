@@ -17,7 +17,7 @@ def replace_input_real(line, inputs):
     matches = re.findall(r'`INPUT_REAL\((.*?)\)', line)
     for match in matches:
         input_signal = match
-        line = f'    input signed reg[0:{mister_discrete_precision + 1}] {input_signal},\n'
+        line = f'    input signed wire[0:{mister_discrete_precision + 1}] {input_signal},\n'
         inputs += [input_signal]
     return line
 
@@ -116,7 +116,7 @@ def remove_parameters(lines):
 
 
 def replace_output_real(code):
-    return re.sub(r'`OUTPUT_REAL\((.*?)\)', r'output signed reg[0:15] \1', code)
+    return re.sub(r'`OUTPUT_REAL\((.*?)\)', rf'output signed wire[0:{mister_discrete_precision + 1}] \1', code)
 
 def replace_dff_into_real(line, points):
     matches = re.findall(r'`DFF_INTO_REAL\((.*?), (.*?), (.*?), (.*?), (.*?), (.*?)\);', line)
@@ -132,9 +132,9 @@ def replace_dff_into_real(line, points):
         new_expression = (
             f"    always @(posedge {match[3]}) begin\n"
             f"        if ({match[2]}) begin\n"
-            f"            {match[1]} <= 16'b0;\n"
+            f"            {match[1]} <= {high_bit + 1}'b0;\n"
             f"        end else begin\n"
-            f"            {match[1]} <= {input_signal2} - {input_signal1};  // Point: {max(point1, point2)}\n"
+            f"            {match[1]} <= {{ {{ {fractional_precision}{{ {input_signal2}[{high_bit}]}}}}, {input_signal2} }} - {input_signal1};  // Point: {max(point1, point2)}\n"
             f"        end\n"
             f"    end\n"
         )

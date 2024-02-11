@@ -9,10 +9,10 @@
 
 module WalkEnAstable555 
 ( 
-    input signed reg[0:15] walk_en,
-    input signed reg[0:15] square_wave,
-    input signed reg[0:15] vcc,
-    output signed reg[0:15] v_control
+    input signed wire[0:15] walk_en,
+    input signed wire[0:15] square_wave,
+    input signed wire[0:15] vcc,
+    output signed wire[0:15] v_control
 );
     // Declaring internal variables.
     signed wire[0:15] tmp0;
@@ -44,11 +44,11 @@ module WalkEnAstable555
         if (`RST_MSDSL) begin
             tmp_circ_4 <= 16'b0;
         end else begin
-            tmp_circ_4 <= (tmp_circ_4 << 12) - tmp6;  // Point: 24
+            tmp_circ_4 <= { { 12{ (tmp_circ_4 << 12)[15]}}, (tmp_circ_4 << 12) } - tmp6;  // Point: 24
         end
     end
     // Assign signal: v_control
-    v_control = ({ { 12{ tmp_circ_4[15]}}, tmp_circ_4 } * 3276) >> 12;  // Scale factor: 3276, Point: 14;
+    assign v_control = ({ { 12{ tmp_circ_4[15]}}, tmp_circ_4 } * 3276) >> 12;  // Scale factor: 3276, Point: 14;
 endmodule
 
 `default_nettype wire
