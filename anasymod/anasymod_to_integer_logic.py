@@ -69,7 +69,7 @@ def replace_assign_real(line, points):
     for match in matches:
         input_signal, output_signal = match
         old_expression = f'`ASSIGN_REAL({input_signal}, {output_signal})'
-        new_expression = f'{output_signal} = ({{ {{ {fractional_precision}{{ {input_signal}[{high_bit}]}}}}, {input_signal} }} * {scale_factor}) >> {points.get(input_signal.strip(), 0)};  // Scale factor: {scale_factor}, Point: {mister_discrete_precision}'
+        new_expression = f'assign {output_signal} = ({{ {{ {fractional_precision}{{ {input_signal}[{high_bit}]}}}}, {input_signal} }} * {scale_factor}) >> {points.get(input_signal.strip(), 0)};  // Scale factor: {scale_factor}, Point: {mister_discrete_precision}'
         line = line.replace(old_expression, new_expression)
     return line
 
