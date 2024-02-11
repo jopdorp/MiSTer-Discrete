@@ -19,7 +19,7 @@ class WalkEnAstable555(MixedSignalModel):
         # define I/O
         self.add_analog_input('walk_en')
         self.add_analog_input('square_wave')
-        self.add_analog_input('vcc') # 12V, seems like this shouldn't be an input, but it doesn't compile otherwise
+        self.add_analog_input('vcc') # 5V, seems like this shouldn't be an input, but it doesn't compile otherwise
         self.add_analog_output('v_control')
 
         c = self.make_circuit()
@@ -47,12 +47,12 @@ def main():
     # parse command line arguments
     parser = ArgumentParser()
     parser.add_argument('-o', '--output', type=str)
-    parser.add_argument('--dt', type=float)
+    parser.add_argument('-f', '--clock_enable_frequency', type=float)
     args = parser.parse_args()
 
     # create the model
-    model = WalkEnAstable555(dt=args.dt)
-
+    model = WalkEnAstable555(dt=1/args.clock_enable_frequency)
+    
     # determine the output filename
     filename = os.path.join(get_full_path(args.output), f'{model.module_name}.sv')
     print('Model will be written to: ' + filename)
