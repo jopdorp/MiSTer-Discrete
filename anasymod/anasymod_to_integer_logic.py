@@ -163,7 +163,7 @@ def replace_dff_into_real(line, points):
             f"        if (~I_RSTn) begin\n"
             f"            {input_signal2} <= {high_bit + 1}'b0;\n"
             f"        end else if (audio_clk_en) begin\n"
-            f"            {input_signal2} <= {input_signal1} >> {point1 - point2}; \n"
+            f"            {input_signal2} <= {input_signal1} >> {point1 - point2};\n"
             # f"            {match[1]} <= {input_signal2} - {input_signal1};  // Point: {max(point1, point2)}\n"
             f"        end\n"
             f"    end\n"
