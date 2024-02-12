@@ -54,7 +54,6 @@ module dk_walk #(
         .I_RSTn(I_RSTn),
         .walk_en(walk_en_5volts_filtered),
         .square_wave(square_osc_out),
-        .vcc(5),
         .v_control(v_control)
     );
 

@@ -17,7 +17,7 @@ args = parser.parse_args()
 
 fractional_precision = args.fractional_precision  # bits of precision for the fractional part of the fixed point number
 vcc = args.vcc
-integer_precision = next(y for y in range(32) if 2**y > vcc) + 1 # plus 1 for the sign bit
+integer_precision = next(y for y in range(32) if 2**y > vcc) + 2 # plus 1 for the sign bit, plus 1 overhead bit
 high_bit = fractional_precision + integer_precision - 1 
 mister_discrete_precision = 14
 
@@ -31,7 +31,10 @@ def replace_input_real(line, inputs):
     matches = re.findall(r'`INPUT_REAL\((.*?)\)', line)
     for match in matches:
         input_signal = match
-        line = f'    input signed[0:{mister_discrete_precision + 1}] {input_signal},\n'
+        if input_signal == "vcc":
+            line = ''
+        else:
+            line = f'    input signed[0:{mister_discrete_precision + 1}] {input_signal},\n'
         inputs += [input_signal]
     return line
 
@@ -66,9 +69,9 @@ def replace_add_real(line, points):
         point1 = points.get(input_signal1, 0)
         point2 = points.get(input_signal2, 0)
         if point1 > point2:
-            input_signal2 = f'({input_signal2} << {point1 - point2})'
+            input_signal2 = f"({{ {input_signal2}, {{ {point1 - point2}{{'0}} }} }})"
         elif point2 > point1:
-            input_signal1 = f'({input_signal1} << {point2 - point1})'
+            input_signal1 = f"({{ {input_signal1}, {{ {point2 - point1}{{'0}} }} }})"
         old_expression = f'`ADD_REAL({match[0]}, {match[1]}, {match[2]})'
         new_expression = f'assign {output_signal} = {input_signal1} + {input_signal2}; // Point: {max(point1, point2)}'
         line = line.replace(old_expression, new_expression)
@@ -102,11 +105,22 @@ def declare_tmp_vars(lines, tmp_var_count):
 
 def denormalize_inputs(lines, inputs, points):
     start_of_file = ""
+    padding = integer_precision
+    if high_bit - mister_discrete_precision > integer_precision:
+        padding = high_bit - mister_discrete_precision
     for i in range(len(lines)):
         match = re.search(r'(module.*\);)', start_of_file, re.DOTALL)
         if match:
             for j, input in enumerate(inputs): # TODO properly take into account point of VCC
-                lines.insert(i + 1 + j, f'    wire signed[0:{high_bit}] {input}_denormalized; // Point {fractional_precision} \n    assign {input}_denormalized = {input} * {vcc} >> {mister_discrete_precision - fractional_precision};\n')
+                if input == "vcc":
+                    lines.insert(i + 1 + j, (
+                        f'    localparam signed[0:{high_bit}] vcc_denormalized = {vcc} << {fractional_precision}; // Point: {fractional_precision}'
+                    ))
+                else:
+                    lines.insert(i + 1 + j, (
+                        f'    wire signed[0:{high_bit}] {input}_denormalized; // Point {fractional_precision} \n'
+                        f'    assign {input}_denormalized = {{ {{ {padding}{{ {input}[{mister_discrete_precision + 1}]}}}}, {input} }} * {vcc} >> {mister_discrete_precision - fractional_precision};\n'
+                    ))
                 points[input + '_denormalized'] = fractional_precision
             lines.insert(i + 2 + j, f'\n')
             break
@@ -150,12 +164,10 @@ def replace_dff_into_real(line, points):
 
         new_expression = (
             f"    always @(posedge clk) begin\n"
-            f"        if (audio_clk_en) begin\n"
-            f"            if (~I_RSTn) begin\n"
-            f"                {match[1]} <= {high_bit + 1}'b0;\n"
-            f"            end else begin\n"
-            f"                {match[1]} <= {input_signal2} - {input_signal1};  // Point: {max(point1, point2)}\n"
-            f"            end\n"
+            f"        if (~I_RSTn) begin\n"
+            f"            {match[1]} <= {high_bit + 1}'b0;\n"
+            f"        end else if (audio_clk_en) begin\n"
+            f"            {match[1]} <= {input_signal2} - {input_signal1};  // Point: {max(point1, point2)}\n"
             f"        end\n"
             f"    end\n"
         )
