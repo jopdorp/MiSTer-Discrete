@@ -1,4 +1,4 @@
-// Model generated on 2024-02-12 15:06:35.857203
+// Model generated on 2024-02-12 15:19:16.467672
 
 
 
@@ -31,16 +31,16 @@ module WalkEnAstable555
     // Assign signal: tmp_circ_4
     assign tmp0 = ({ { 12{ tmp_circ_4[16]}}, tmp_circ_4 } * 4091) >> 12;  // Point: 12;
     assign tmp1 = ({ { 12{ walk_en_denormalized[16]}}, walk_en_denormalized } * 2169) >> 12;  // Point: 23;
-    assign tmp2 = ({ { 12{ square_wave_denormalized[16]}}, square_wave_denormalized } * 3615) >> 12;  // Point: 24;
-    assign tmp3 = ({ { 12{ vcc_denormalized[16]}}, vcc_denormalized } * 2646) >> 12;  // Point: 22;
+    assign tmp2 = ({ { 12{ vcc_denormalized[16]}}, vcc_denormalized } * 2646) >> 12;  // Point: 22;
+    assign tmp3 = ({ { 12{ square_wave_denormalized[16]}}, square_wave_denormalized } * 3615) >> 12;  // Point: 24;
     assign tmp4 = ({ tmp0, { 11{'0} } }) + tmp1; // Point: 23;
-    assign tmp5 = tmp2 + ({ tmp3, { 2{'0} } }); // Point: 24;
+    assign tmp5 = ({ tmp2, { 2{'0} } }) + tmp3; // Point: 24;
     assign tmp6 = ({ tmp4, { 1{'0} } }) + tmp5; // Point: 24;
     always @(posedge clk) begin
         if (~I_RSTn) begin
             tmp_circ_4 <= 17'b0;
         end else if (audio_clk_en) begin
-            tmp_circ_4 <= (tmp_circ_4 << 12) - tmp6;  // Point: 24
+            tmp_circ_4 <= tmp6 >> 12;
         end
     end
     // Assign signal: v_control

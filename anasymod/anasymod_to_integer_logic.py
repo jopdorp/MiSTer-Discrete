@@ -157,17 +157,14 @@ def replace_dff_into_real(line, points):
         input_signal1, input_signal2, reset_signal, clock_signal, one, zero = [x.strip() for x in match]
         point1 = points.get(input_signal1, 0)
         point2 = points.get(input_signal2, 0)
-        if point1 > point2:
-            input_signal2 = f'({input_signal2} << {point1 - point2})'
-        elif point2 > point1:
-            input_signal1 = f'({input_signal1} << {point2 - point1})'
 
         new_expression = (
             f"    always @(posedge clk) begin\n"
             f"        if (~I_RSTn) begin\n"
-            f"            {match[1]} <= {high_bit + 1}'b0;\n"
+            f"            {input_signal2} <= {high_bit + 1}'b0;\n"
             f"        end else if (audio_clk_en) begin\n"
-            f"            {match[1]} <= {input_signal2} - {input_signal1};  // Point: {max(point1, point2)}\n"
+            f"            {input_signal2} <= {input_signal1} >> {point1 - point2}; \n"
+            # f"            {match[1]} <= {input_signal2} - {input_signal1};  // Point: {max(point1, point2)}\n"
             f"        end\n"
             f"    end\n"
         )
