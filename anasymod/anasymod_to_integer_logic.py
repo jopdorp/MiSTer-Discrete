@@ -11,7 +11,7 @@ print('Converting to fixed point...')
 parser = ArgumentParser()
 parser.add_argument('-i', '--input', type=str)
 parser.add_argument('-v', '--vcc', type=int, default=5)
-parser.add_argument('-p', '--fractional-precision', type=int, default=12)
+parser.add_argument('-p', '--fractional-precision', type=int, default=14)
 args = parser.parse_args()
 
 

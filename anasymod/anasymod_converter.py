@@ -15,7 +15,7 @@ def main():
     parser = ArgumentParser()
     parser.add_argument('-m', '--model', type=str)
     parser.add_argument('-f', '--clock-enable-frequency', type=int, default=96000)
-    parser.add_argument('-p', '--fractional-precision', type=int, default=12)
+    parser.add_argument('-p', '--fractional-precision', type=int, default=14)
     parser.add_argument('-v', '--vcc', type=int, default=5)
     parser.add_argument('-s', '--skip-integer-conversion', action='store_true')
     args = parser.parse_args()
