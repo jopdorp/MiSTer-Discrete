@@ -1,4 +1,4 @@
-// Model generated on 2024-02-12 17:58:09.091850
+// Model generated on 2024-02-12 22:07:05.422080
 
 
 
@@ -22,28 +22,28 @@ module WalkEnAstable555
     wire signed[0:18] tmp6;
 
     wire signed[0:18] walk_en_denormalized; // Point 14 
-    assign walk_en_denormalized = { { 5{ walk_en[15]}}, walk_en } * 5 >> 0;
+    assign walk_en_denormalized = walk_en * 5 >> 0;
     wire signed[0:18] square_wave_denormalized; // Point 14 
-    assign square_wave_denormalized = { { 5{ square_wave[15]}}, square_wave } * 5 >> 0;
+    assign square_wave_denormalized = square_wave * 5 >> 0;
     localparam signed[0:18] vcc_denormalized = 5 << 14; // Point: 14
-    reg signed[0:18] tmp_circ_4 = 0;  // Point: 12 
+    reg signed[0:32] tmp_circ_4 = 0;  // Point: 28 
 
     // Assign signal: tmp_circ_4
-    assign tmp0 = ({ { 14{ tmp_circ_4[18]}}, tmp_circ_4 } * 16366) >> 14;  // Point: 12;
-    assign tmp1 = ({ { 14{ walk_en_denormalized[18]}}, walk_en_denormalized } * 8677) >> 14;  // Point: 25;
-    assign tmp2 = ({ { 14{ square_wave_denormalized[18]}}, square_wave_denormalized } * 14462) >> 14;  // Point: 26;
-    assign tmp3 = ({ { 14{ vcc_denormalized[18]}}, vcc_denormalized } * 10586) >> 14;  // Point: 24;
-    assign tmp4 = ({ tmp0, { 13{'0} } }) + tmp1; // Point: 25;
-    assign tmp5 = tmp2 + ({ tmp3, { 2{'0} } }); // Point: 26;
-    assign tmp6 = ({ tmp4, { 1{'0} } }) + tmp5; // Point: 26;
+    assign tmp0 = tmp_circ_4 * 16366 >> 14;  // Point: 28;
+    assign tmp1 = vcc_denormalized * 10586 >> 14;  // Point: 24;
+    assign tmp2 = square_wave_denormalized * 14462 >> 14;  // Point: 26;
+    assign tmp3 = walk_en_denormalized * 8677 >> 14;  // Point: 25;
+    assign tmp4 = tmp0 + ({ tmp1, { 4{'0} } }); // Point: 28;
+    assign tmp5 = tmp2 + ({ tmp3, { 1{'0} } }); // Point: 26;
+    assign tmp6 = tmp4 + ({ tmp5, { 2{'0} } }); // Point: 28;
     always @(posedge clk) begin
         if (~I_RSTn) begin
             tmp_circ_4 <= 19'b0;
         end else if (audio_clk_en) begin
-            tmp_circ_4 <= tmp6 >> 14;
+            tmp_circ_4 <= tmp6 >> 0;
         end
     end
     // Assign signal: v_control
-    assign v_control = ({ { 14{ tmp_circ_4[18]}}, tmp_circ_4 } * 3276) >> 12;  // Scale factor: 3276, Point: 14;
+    assign v_control = tmp_circ_4 * 3276 >> 28;  // Scale factor: 3276, Point: 14;
 endmodule
 

@@ -24,7 +24,7 @@ mister_discrete_precision = 14
 def convert_to_fixed_point(real_value):
     mantissa, exponent = math.frexp(real_value)
     point = abs(exponent) + fractional_precision
-    fixed_point_value = round(real_value * (2 ** point))
+    fixed_point_value = round(mantissa * (2 ** fractional_precision))
     return fixed_point_value, point
 
 def replace_input_real(line, inputs):
@@ -42,8 +42,8 @@ def replace_make_real(line, points):
     matches = re.findall(r'`MAKE_REAL\((.*?), (.*?)\)', line)
     for match in matches:
         input_signal, output_signal = match
-        line = f'    reg signed[0:{high_bit}] {input_signal} = 0;  // Point: 12 \n\n'
-        points[input_signal.strip()] = 12
+        line = f'    reg signed[0:{high_bit + fractional_precision}] {input_signal} = 0;  // Point: {fractional_precision * 2} \n\n'
+        points[input_signal.strip()] = fractional_precision * 2
     return line
 
 def replace_mul_const_real(line, points, inputs):
@@ -57,7 +57,7 @@ def replace_mul_const_real(line, points, inputs):
         if input_signal in inputs:
              input_signal = f'{input_signal}_denormalized'
         total_point = point + points.get(input_signal.strip(), 0) - fractional_precision
-        new_expression = f'assign {output_signal} = ({{ {{ {fractional_precision}{{ {input_signal}[{high_bit}]}}}}, {input_signal} }} * {fixed_point_value}) >> {fractional_precision};  // Point: {total_point}'
+        new_expression = f'assign {output_signal} = {input_signal} * {fixed_point_value} >> {fractional_precision};  // Point: {total_point}'
         line = line.replace(old_expression, new_expression)
         points[output_signal.strip()] = total_point
     return line, len(matches)
@@ -86,7 +86,7 @@ def replace_assign_real(line, points):
     for match in matches:
         input_signal, output_signal = match
         old_expression = f'`ASSIGN_REAL({input_signal}, {output_signal})'
-        new_expression = f'assign {output_signal} = ({{ {{ {fractional_precision}{{ {input_signal}[{high_bit}]}}}}, {input_signal} }} * {scale_factor}) >> {points.get(input_signal.strip(), 0)};  // Scale factor: {scale_factor}, Point: {mister_discrete_precision}'
+        new_expression = f'assign {output_signal} = {input_signal} * {scale_factor} >> {points.get(input_signal.strip(), 0)};  // Scale factor: {scale_factor}, Point: {mister_discrete_precision}'
         line = line.replace(old_expression, new_expression)
     return line
 
@@ -119,7 +119,7 @@ def denormalize_inputs(lines, inputs, points):
                 else:
                     lines.insert(i + 1 + j, (
                         f'    wire signed[0:{high_bit}] {input}_denormalized; // Point {fractional_precision} \n'
-                        f'    assign {input}_denormalized = {{ {{ {padding}{{ {input}[{mister_discrete_precision + 1}]}}}}, {input} }} * {vcc} >> {mister_discrete_precision - fractional_precision};\n'
+                        f'    assign {input}_denormalized = {input} * {vcc} >> {mister_discrete_precision - fractional_precision};\n'
                     ))
                 points[input + '_denormalized'] = fractional_precision
             lines.insert(i + 2 + j, f'\n')
