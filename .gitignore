@@ -18,3 +18,5 @@ right.txt
 __pycache__/
 anasymod/fixed_point_WalkEnAstable555.sv
 anasymod/WalkEnAstable555.sv
+!dk_walk_walk_en_5volts_filtered.csv
+!dk_walk_square_osc_out.csv

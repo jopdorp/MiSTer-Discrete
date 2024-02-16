@@ -38,7 +38,7 @@ module invertor_square_wave_oscilator#(
     parameter SAMPLE_RATE = 48000,
     parameter R1 = 4300,
     parameter C_MICROFARADS_16_SHIFTED = 655360, // 10 microfarad
-    parameter VCC = 12,
+    parameter VCC = 5,
     parameter V_SIGNAL = 5
 ) (
     input clk,

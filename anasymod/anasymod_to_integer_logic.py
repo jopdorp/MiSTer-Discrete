@@ -42,7 +42,7 @@ def replace_make_real(line, points):
     matches = re.findall(r'`MAKE_REAL\((.*?), (.*?)\)', line)
     for match in matches:
         input_signal, output_signal = match
-        line = f'    reg signed[0:{high_bit + fractional_precision}] {input_signal} = 0;  // Point: {fractional_precision * 2} \n\n'
+        line = f'    reg signed[0:{high_bit + fractional_precision * 2}] {input_signal} = 0;  // Point: {fractional_precision * 2} \n\n'
         points[input_signal.strip()] = fractional_precision * 2
     return line
 
@@ -97,7 +97,7 @@ def declare_tmp_vars(lines, tmp_var_count):
         match = re.search(r'(module.*\);)', start_of_file, re.DOTALL)
         if match:
             for j in range(tmp_var_count):
-                lines.insert(i + 1 + j, f'    wire signed[0:{high_bit}] tmp{j};\n')
+                lines.insert(i + 1 + j, f'    wire signed[0:{high_bit + fractional_precision}] tmp{j};\n')
             lines.insert(i + 2 + j, f'\n')
             break
         start_of_file += '\n' + lines[i]
