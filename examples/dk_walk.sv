@@ -90,13 +90,13 @@ module dk_walk #(
 
     // simulate D5 which is a 1SS53 rectifier diode
     wire signed[15:0] walk_en_rectified;
-    assign walk_en_rectified = walk_en_high_passed > 0 ? walk_en_high_passed : 0;
+    assign walk_en_rectified = walk_en_high_passed > 0 ? walk_en_high_passed : walk_en_high_passed >> 8;
 
 
     // Simulate Q6 which is a C1815 NPN transistor, which opens at 0.6 volts
     // 2^14 * 0.6/12 = 820 , for 0.6 volts
     wire signed[15:0] walk_en_oscilated;
-    assign walk_en_oscilated = astable_555_out > 820 ? walk_en_high_passed : 0;
+    assign walk_en_oscilated = astable_555_out > 820 ? walk_en_rectified : 0;
 
     wire signed[15:0] walk_en_oscilated_high_passed;
     
